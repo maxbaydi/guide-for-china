@@ -1,0 +1,17 @@
+{
+  "string": {
+    "min": "",
+    "max": "",
+    "email": "",
+    "url": ""
+  },
+  "number": {
+    "min": "",
+    "max": "",
+    "positive": "",
+    "integer": ""
+  },
+  "required": "",
+  "invalid": ""
+}
+
