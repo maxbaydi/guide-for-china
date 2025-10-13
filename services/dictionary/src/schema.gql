@@ -1,0 +1,68 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Character {
+  createdAt: DateTime!
+  definitions: [Definition!]!
+  examples: [Example!]!
+  frequency: Int
+  hskLevel: Int
+  id: ID!
+  pinyin: String
+  simplified: String!
+  traditional: String
+}
+
+type CharacterAnalysis {
+  character: String!
+  details: Character
+  position: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Definition {
+  characterId: String!
+  id: ID!
+  order: Int!
+  translation: String!
+}
+
+type Example {
+  characterId: String!
+  chinese: String!
+  id: ID!
+  pinyin: String
+  russian: String!
+  source: String
+}
+
+type Phrase {
+  chinese: String!
+  context: String
+  createdAt: DateTime!
+  id: ID!
+  pinyin: String
+  russian: String!
+}
+
+type Query {
+  """Разобрать текст на иероглифы и получить информацию о каждом"""
+  analyzeText(text: String!): [CharacterAnalysis!]!
+
+  """Получить полную информацию об иероглифе по ID"""
+  getCharacter(id: String!): Character
+
+  """Получить информацию об иероглифе по упрощенному написанию"""
+  getCharacterBySimplified(simplified: String!): Character
+
+  """Поиск иероглифов по упрощенному написанию, пиньиню или переводу"""
+  searchCharacters(limit: Int = 20, query: String!): [Character!]!
+
+  """Поиск фраз по русскому или китайскому тексту"""
+  searchPhrases(limit: Int = 20, query: String!): [Phrase!]!
+}

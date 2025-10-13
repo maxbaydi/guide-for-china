@@ -1,0 +1,76 @@
+// Prisma schema for Dictionary Service
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Main character/word model for Chinese characters
+model Character {
+  id           String   @id @default(uuid())
+  simplified   String   @unique
+  traditional  String?
+  pinyin       String?
+  hskLevel     Int?     // HSK level (1-6)
+  frequency    Int?     // Frequency rank
+  searchVector Unsupported("tsvector")?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  definitions  Definition[]
+  examples     Example[]
+  
+  @@index([simplified])
+  @@index([pinyin])
+  @@map("characters")
+}
+
+// Definition/translation of a character
+model Definition {
+  id           String    @id @default(uuid())
+  characterId  String
+  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  translation  String    @db.Text
+  partOfSpeech String?   // e.g., "глагол", "существительное"
+  context      String?   // e.g., "перен.", "устар."
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  
+  @@index([characterId])
+  @@map("definitions")
+}
+
+// Example usage of a character
+model Example {
+  id          String    @id @default(uuid())
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  chinese     String    @db.Text
+  pinyin      String?   @db.Text
+  russian     String    @db.Text
+  source      String?   // Source of the example
+  createdAt   DateTime  @default(now())
+  
+  @@index([characterId])
+  @@map("examples")
+}
+
+// Phrase model for Russian-Chinese dictionary (reverse lookup)
+model Phrase {
+  id           String   @id @default(uuid())
+  russian      String   @db.Text
+  chinese      String   @db.Text
+  pinyin       String?  @db.Text
+  context      String?
+  searchVector Unsupported("tsvector")?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([russian])
+  @@map("phrases")
+}
+

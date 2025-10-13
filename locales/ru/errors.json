@@ -1,0 +1,28 @@
+{
+  "validation": {
+    "required": "Поле обязательно для заполнения",
+    "invalidEmail": "Неверный формат email",
+    "passwordTooShort": "Пароль должен содержать минимум 8 символов",
+    "passwordsDoNotMatch": "Пароли не совпадают",
+    "invalidCredentials": "Неверный email или пароль"
+  },
+  "auth": {
+    "userNotFound": "Пользователь не найден",
+    "emailAlreadyExists": "Пользователь с таким email уже существует",
+    "unauthorized": "Необходима авторизация",
+    "tokenExpired": "Токен истек",
+    "invalidToken": "Неверный токен"
+  },
+  "subscription": {
+    "limitExceeded": "Превышен лимит запросов для вашего тарифа",
+    "paymentFailed": "Ошибка оплаты",
+    "subscriptionNotFound": "Подписка не найдена",
+    "alreadySubscribed": "Вы уже подписаны на этот тариф"
+  },
+  "server": {
+    "internalError": "Внутренняя ошибка сервера",
+    "serviceUnavailable": "Сервис временно недоступен",
+    "badRequest": "Некорректный запрос"
+  }
+}
+
