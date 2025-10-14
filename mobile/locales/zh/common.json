@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "汉指南",
+    "description": "中俄词典"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "email": "电子邮件",
+    "password": "密码",
+    "username": "用户名",
+    "displayName": "显示名称",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码？",
+    "alreadyHaveAccount": "已有账户？",
+    "dontHaveAccount": "没有账户？",
+    "loginTitle": "登录 HanGuide",
+    "registerTitle": "注册",
+    "loginButton": "登录",
+    "registerButton": "注册",
+    "logout": "退出"
+  },
+  "search": {
+    "title": "搜索",
+    "placeholder": "汉字、拼音或翻译",
+    "history": "搜索历史",
+    "noResults": "未找到结果",
+    "resultsFound": "找到 {{count}} 个结果",
+    "loading": "加载中...",
+    "wordOfTheDay": "每日一词",
+    "exampleCard": "示例卡片"
+  },
+  "character": {
+    "details": "汉字详情",
+    "simplified": "简体",
+    "traditional": "繁体",
+    "pinyin": "拼音",
+    "radical": "部首",
+    "strokes": "笔画",
+    "hskLevel": "HSK",
+    "frequency": "频率",
+    "definitions": "释义",
+    "examples": "例句",
+    "addToCollection": "添加到词集"
+  },
+  "analyze": {
+    "title": "文本分析",
+    "subtitle": "输入要分析的文本",
+    "placeholder": "我爱学中文...",
+    "analyzeButton": "分析",
+    "pasteButton": "粘贴",
+    "clearButton": "清除",
+    "results": "分析结果",
+    "example": "例句："
+  },
+  "collections": {
+    "title": "我的词集",
+    "subtitle": "学习词汇列表",
+    "favorites": "收藏",
+    "createNew": "创建词集",
+    "newCollection": "新词集",
+    "collectionName": "名称",
+    "namePlaceholder": "例如：美食与饮料",
+    "wordsCount": "{{count}} 个词",
+    "wordCount": "{{count}} 个词",
+    "emptyCollection": "词集为空",
+    "addedTo": "已添加到\"{{name}}\"",
+    "removedFrom": "已从\"{{name}}\"删除",
+    "createButton": "创建"
+  },
+  "profile": {
+    "title": "个人资料",
+    "subscription": "订阅状态",
+    "subscriptionFree": "免费版",
+    "subscriptionBasic": "基础版",
+    "subscriptionPremium": "高级版",
+    "upgradeButton": "✨ 升级到高级版",
+    "statistics": "统计",
+    "wordsLearned": "已学词汇",
+    "studyDays": "连续天数",
+    "totalSearches": "总搜索次数",
+    "studyMinutes": "分钟",
+    "requestsRemaining": "今日剩余 {{remaining}}/{{total}} 次请求",
+    "settings": "设置",
+    "darkMode": "深色模式",
+    "notifications": "\"每日一词\"通知",
+    "comingSoon": "即将推出"
+  },
+  "errors": {
+    "loginFailed": "登录失败",
+    "registerFailed": "注册失败",
+    "networkError": "网络错误",
+    "searchFailed": "搜索失败",
+    "analysisFailed": "分析失败",
+    "invalidEmail": "邮箱无效",
+    "passwordTooShort": "密码太短",
+    "passwordsDontMatch": "密码不匹配",
+    "invalidCredentials": "电子邮件或密码无效",
+    "accountDeactivated": "账号已停用",
+    "userAlreadyExists": "该邮箱已被注册"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "back": "返回",
+    "next": "下一步",
+    "submit": "提交",
+    "confirm": "确认",
+    "close": "关闭",
+    "loading": "加载中..."
+  }
+}
+

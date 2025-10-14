@@ -1,99 +1,363 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# HanGuide API Gateway
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Единая точка входа для всех микросервисов HanGuide.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Функциональность
 
-## Description
+- ✅ Проксирование запросов к User Service и Dictionary Service
+- ✅ JWT аутентификация
+- ✅ Rate limiting с учетом тарифных планов
+- ✅ CORS configuration
+- ✅ Health checks
+- ✅ Redis для кэширования и rate limiting
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Архитектура
 
-## Project setup
-
-```bash
-$ npm install
+```
+Client → API Gateway (4000) → User Service (4002)
+                            → Dictionary Service (4001)
+                            → Redis (6379)
 ```
 
-## Compile and run the project
+## API Endpoints
 
-```bash
-# development
-$ npm run start
+### Authentication (User Service Proxy)
 
-# watch mode
-$ npm run start:dev
+#### POST /api/v1/auth/register
+Регистрация нового пользователя
 
-# production mode
-$ npm run start:prod
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123",
+  "displayName": "John Doe"
+}
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+**Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "displayName": "John Doe",
+    "role": "USER",
+    "subscriptionTier": "FREE",
+    "dailyRequestsUsed": 0,
+    "dailyRequestsLimit": 50
+  }
+}
 ```
 
-## Deployment
+#### POST /api/v1/auth/login
+Вход в систему
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### POST /api/v1/auth/refresh
+Обновление токенов
 
-## Resources
+**Request:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+#### GET /api/v1/auth/me
+Получение информации о текущем пользователе (требуется JWT)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
 
-## Support
+#### POST /api/v1/auth/logout
+Выход из системы (требуется JWT)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
 
-## Stay in touch
+**Request:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Dictionary (Dictionary Service Proxy)
 
-## License
+#### GET /api/v1/dictionary/search?q={query}&limit={limit}
+Поиск иероглифов
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Query Parameters:**
+- `q` (required): строка поиска
+- `limit` (optional): количество результатов (по умолчанию 20)
+
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "simplified": "你好",
+    "traditional": "你好",
+    "pinyin": "nǐ hǎo",
+    "frequency": 9999,
+    "definitions": [
+      {
+        "translation": "привет, здравствуйте",
+        "partOfSpeech": "приветствие"
+      }
+    ]
+  }
+]
+```
+
+#### GET /api/v1/dictionary/character/:id
+Получение детальной информации об иероглифе
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "simplified": "好",
+  "traditional": "好",
+  "pinyin": "hǎo",
+  "radical": "女",
+  "strokes": 6,
+  "frequency": 9999,
+  "definitions": [
+    {
+      "translation": "хороший, добрый",
+      "partOfSpeech": "прилагательное",
+      "order": 0
+    }
+  ],
+  "examples": [
+    {
+      "chinese": "很好",
+      "pinyin": "hěn hǎo",
+      "translation": "очень хорошо"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/dictionary/analyze?text={text}
+Разбор текста на иероглифы
+
+**Query Parameters:**
+- `text` (required): текст на китайском для анализа
+
+**Response:**
+```json
+[
+  {
+    "position": 0,
+    "character": "你",
+    "pinyin": "nǐ",
+    "definitions": ["ты, вы"]
+  },
+  {
+    "position": 1,
+    "character": "好",
+    "pinyin": "hǎo",
+    "definitions": ["хороший, хорошо"]
+  }
+]
+```
+
+#### GET /api/v1/dictionary/phrases/search?q={query}&limit={limit}
+Поиск фраз и выражений
+
+## Rate Limiting
+
+API Gateway реализует многоуровневую систему лимитов:
+
+### По тарифам (на основе JWT токена)
+
+- **Анонимные пользователи**: 10 запросов/день
+- **FREE tier**: 50 запросов/день
+- **PREMIUM tier**: 10,000 запросов/день
+
+### По IP (глобальный throttling)
+
+- 100 запросов/минуту на один IP адрес
+
+### Headers ответа
+
+```
+X-RateLimit-Limit: 50
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1760420000
+```
+
+### Ошибка при превышении лимита
+
+**Status: 429 Too Many Requests**
+
+```json
+{
+  "statusCode": 429,
+  "message": "Daily limit exceeded. Current tier: FREE. Limit: 50 requests per day.",
+  "tier": "FREE",
+  "limit": 50,
+  "used": 51
+}
+```
+
+## Health Checks
+
+### GET /
+Базовая информация о сервисе
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "service": "HanGuide API Gateway",
+  "version": "1.0.0",
+  "timestamp": "2025-10-14T05:30:00.000Z"
+}
+```
+
+### GET /health
+Детальная проверка здоровья
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "uptime": 123.456,
+  "timestamp": "2025-10-14T05:30:00.000Z"
+}
+```
+
+## Переменные окружения
+
+```env
+# Service
+PORT=4000
+NODE_ENV=development
+CORS_ORIGIN=*
+
+# Microservices
+USER_SERVICE_URL=http://user-service:4002
+DICTIONARY_SERVICE_URL=http://dictionary-service:4001
+
+# Redis
+REDIS_URL=redis://redis:6379
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# JWT (должны совпадать с User Service)
+JWT_SECRET=your-secret-key
+JWT_REFRESH_SECRET=your-refresh-secret
+```
+
+## Запуск
+
+### Docker (рекомендуется)
+
+```bash
+docker-compose build api-gateway
+docker-compose up -d api-gateway
+docker-compose logs -f api-gateway
+```
+
+### Локально
+
+```bash
+cd services/api-gateway
+npm install
+npm run build
+npm run start:dev
+```
+
+## Структура проекта
+
+```
+services/api-gateway/
+├── src/
+│   ├── auth/                   # Auth module (User Service proxy)
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   └── auth.module.ts
+│   ├── dictionary/             # Dictionary module (Dictionary Service proxy)
+│   │   ├── dictionary.controller.ts
+│   │   ├── dictionary.service.ts
+│   │   └── dictionary.module.ts
+│   ├── guards/                 # Guards
+│   │   ├── jwt-auth.guard.ts
+│   │   └── rate-limit.guard.ts
+│   ├── redis/                  # Redis module
+│   ├── app.module.ts
+│   ├── health.controller.ts
+│   └── main.ts
+├── Dockerfile
+├── package.json
+└── README.md
+```
+
+## Тестирование
+
+### Регистрация
+```bash
+curl -X POST http://localhost:4000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"SecurePass123","displayName":"Test User"}'
+```
+
+### Вход
+```bash
+curl -X POST http://localhost:4000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"SecurePass123"}'
+```
+
+### Поиск иероглифов
+```bash
+curl "http://localhost:4000/api/v1/dictionary/search?q=你好"
+```
+
+### Поиск с JWT (учитывает rate limits)
+```bash
+curl "http://localhost:4000/api/v1/dictionary/search?q=好" \
+  -H "Authorization: Bearer <your-token>"
+```
+
+## Безопасность
+
+- JWT токены валидируются на каждом защищенном эндпоинте
+- Rate limiting предотвращает DDoS и перегрузку
+- CORS настроен для безопасного доступа из мобильного приложения
+- Все пароли хешируются в User Service (bcrypt)
+- Refresh токены хранятся в БД и могут быть отозваны
+
+## Мониторинг
+
+Рекомендуется добавить:
+- Prometheus metrics
+- ELK stack для логов
+- Health check dashboard
+- Alert system для критических ошибок
+
+## Roadmap
+
+- [ ] GraphQL Federation
+- [ ] WebSocket support для real-time обновлений
+- [ ] Circuit breaker для отказоустойчивости
+- [ ] Request tracing (Jaeger/Zipkin)
+- [ ] API versioning
+- [ ] Swagger/OpenAPI документация

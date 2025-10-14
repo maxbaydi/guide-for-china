@@ -1,7 +1,7 @@
 {
-  "name": "@guide-for-china/user-service",
+  "name": "@hanguide/user-service",
   "version": "1.0.0",
-  "description": "User Service with JWT Authentication for Guide for China",
+  "description": "User Service with JWT Authentication for HanGuide",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@apollo/server": "^4.12.2",
     "@nestjs/apollo": "^12.2.2",
+    "@nestjs/axios": "^3.0.1",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^10.3.0",
@@ -28,6 +29,7 @@
     "@nestjs/platform-express": "^10.3.0",
     "@prisma/client": "^5.7.1",
     "apollo-server-express": "^3.13.0",
+    "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",

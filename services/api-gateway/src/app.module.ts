@@ -1,42 +1,34 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { RedisModule } from './redis/redis.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { DictionaryModule } from './dictionary/dictionary.module';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
-    // Конфигурация
+    // Global configuration
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // GraphQL - пока используем простой подход без Federation
-    // Позже перейдем на Apollo Federation когда добавим больше сервисов
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      autoSchemaFile: true,
-      playground: true,
-      introspection: true,
-      context: ({ req }) => ({ req }),
-    }),
-
-    // Rate Limiting
+    // Global throttling (requests per minute)
     ThrottlerModule.forRoot([
       {
-        ttl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10) * 1000, // миллисекунды
-        limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute per IP
       },
     ]),
 
-    // Redis для кэширования
+    // Redis for caching and rate limiting
     RedisModule,
+
+    // Feature modules
+    AuthModule,
+    DictionaryModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [HealthController],
 })
 export class AppModule {}

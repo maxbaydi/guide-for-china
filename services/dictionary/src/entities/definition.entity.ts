@@ -11,6 +11,12 @@ export class Definition {
   @Field()
   translation: string;
 
+  @Field({ nullable: true })
+  partOfSpeech?: string;
+
+  @Field({ nullable: true })
+  context?: string;
+
   @Field(() => Int)
   order: number;
 }

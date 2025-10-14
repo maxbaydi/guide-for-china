@@ -61,5 +61,14 @@ export class DictionaryResolver {
   ): Promise<CharacterAnalysis[]> {
     return this.dictionaryService.analyzeText(text);
   }
+
+  @Query(() => Character, {
+    name: 'wordOfTheDay',
+    description: 'Получить слово дня',
+    nullable: true,
+  })
+  async wordOfTheDay(): Promise<Character | null> {
+    return this.dictionaryService.getWordOfTheDay();
+  }
 }
 

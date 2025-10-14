@@ -24,12 +24,22 @@ export class AuthService {
   ) {}
 
   async register(registerInput: RegisterInput): Promise<AuthResponse> {
-    const { email, password, displayName } = registerInput;
+    const { email, password, username, displayName } = registerInput;
 
     // Check if user already exists
     const existingUser = await this.userService.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
+    }
+
+    // Check if username is already taken
+    if (username) {
+      const existingUsername = await this.prisma.user.findUnique({
+        where: { username },
+      });
+      if (existingUsername) {
+        throw new ConflictException('Username is already taken');
+      }
     }
 
     // Hash password
@@ -40,6 +50,7 @@ export class AuthService {
       data: {
         email,
         passwordHash,
+        username,
         displayName,
         provider: 'EMAIL',
       },

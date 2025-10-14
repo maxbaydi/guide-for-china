@@ -1,5 +1,5 @@
-import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
-import { AuthProvider, UserRole } from '@prisma/client';
+import { ObjectType, Field, ID, registerEnumType, Int } from '@nestjs/graphql';
+import { AuthProvider, UserRole, SubscriptionTier } from '@prisma/client';
 
 registerEnumType(AuthProvider, {
   name: 'AuthProvider',
@@ -11,6 +11,11 @@ registerEnumType(UserRole, {
   description: 'User role types',
 });
 
+registerEnumType(SubscriptionTier, {
+  name: 'SubscriptionTier',
+  description: 'Subscription tier types',
+});
+
 @ObjectType()
 export class User {
   @Field(() => ID)
@@ -18,6 +23,9 @@ export class User {
 
   @Field()
   email: string;
+
+  @Field({ nullable: true })
+  username?: string;
 
   // Password hash is intentionally not exposed
   passwordHash?: string;
@@ -42,6 +50,34 @@ export class User {
 
   @Field()
   emailVerified: boolean;
+
+  @Field(() => SubscriptionTier)
+  subscriptionTier: SubscriptionTier;
+
+  @Field(() => Int)
+  dailyRequestsUsed: number;
+
+  @Field(() => Int)
+  dailyRequestsLimit: number;
+
+  @Field()
+  lastRequestReset: Date;
+
+  // Statistics
+  @Field(() => Int)
+  searchCount: number;
+
+  @Field(() => Int)
+  analysisCount: number;
+
+  @Field(() => Int)
+  charactersLearned: number;
+
+  @Field(() => Int)
+  studyTimeMinutes: number;
+
+  @Field()
+  lastActiveAt: Date;
 
   @Field()
   createdAt: Date;

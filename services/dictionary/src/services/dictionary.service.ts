@@ -13,7 +13,7 @@ export class DictionaryService {
    */
   async searchCharacters(query: string, limit: number = 20): Promise<Character[]> {
     const results = await this.prisma.$queryRaw<Character[]>`
-      SELECT * FROM search_chinese_characters(${query}, ${limit})
+      SELECT * FROM search_chinese_characters(${query}, ${limit}::int)
     `;
     
     // Для каждого иероглифа загружаем связанные данные
@@ -143,6 +143,39 @@ export class DictionaryService {
       examples: exampleCount,
       phrases: phraseCount,
     };
+  }
+
+  /**
+   * Получить слово дня
+   * Использует дату как seed для детерминированного выбора
+   */
+  async getWordOfTheDay(): Promise<Character | null> {
+    // Используем текущую дату как seed
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const seed = today.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+    
+    // Получаем случайный иероглиф с HSK уровнем 1-3 (для начинающих)
+    const characters = await this.prisma.$queryRaw<any[]>`
+      SELECT * FROM chinese_characters 
+      WHERE hsk_level BETWEEN 1 AND 3
+      ORDER BY md5(simplified || ${seed}::text)
+      LIMIT 1
+    `;
+    
+    if (!characters || characters.length === 0) return null;
+    
+    // Загружаем полную информацию об иероглифе
+    const character = await this.prisma.character.findUnique({
+      where: { id: characters[0].id },
+      include: {
+        definitions: {
+          orderBy: { order: 'asc' },
+        },
+        examples: true,
+      },
+    });
+    
+    return character as Character;
   }
 }
 
