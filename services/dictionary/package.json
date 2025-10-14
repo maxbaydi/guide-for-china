@@ -1,7 +1,7 @@
 {
-  "name": "@guide-for-china/dictionary-service",
+  "name": "@hanguide/dictionary-service",
   "version": "1.0.0",
-  "description": "Dictionary Service for Chinese-Russian translations",
+  "description": "Dictionary Service for HanGuide - Chinese-Russian translations",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",

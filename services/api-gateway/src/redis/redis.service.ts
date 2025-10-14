@@ -88,6 +88,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Алиас для incr (для совместимости)
+   */
+  async increment(key: string): Promise<number> {
+    return this.incr(key);
+  }
+
+  /**
    * Получить прямой доступ к клиенту Redis
    */
   getClient(): Redis {

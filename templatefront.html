@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HanGuide - Предварительный дизайн</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide-react/dist/lucide-react.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #E5E7EB; /* tailwind bg-gray-200 */
+        }
+        .chinese-serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+        /* Custom colors from the design concept */
+        .bg-off-white { background-color: #F7F7F7; }
+        .text-dark-charcoal { color: #2D2D2D; }
+        .bg-vibrant-red { background-color: #E53935; }
+        .text-vibrant-red { color: #E53935; }
+        .border-vibrant-red { border-color: #E53935; }
+        .bg-jade-green { background-color: #1DB954; }
+        .text-jade-green { color: #1DB954; }
+        
+        /* Forcing mobile-like view */
+        .mobile-screen {
+            max-width: 420px;
+            height: 850px;
+        }
+        /* Hide scrollbar for clean look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Simple toggle switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #1DB954;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #1DB954;
+        }
+
+        /* Animations for Modal and Toast */
+        @keyframes slide-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slide-up 0.3s ease-out forwards;
+        }
+
+        @keyframes fade-in-out {
+            0%, 100% { opacity: 0; transform: translateY(20px) translateX(-50%); }
+            10%, 90% { opacity: 1; transform: translateY(0) translateX(-50%); }
+        }
+        .animate-fade-in-out {
+            animation: fade-in-out 3s ease-in-out forwards;
+        }
+        
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen p-4">
+
+    <!-- Mobile Screen Container -->
+    <div class="mobile-screen w-full mx-auto bg-off-white text-dark-charcoal rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        
+        <!-- Main Content Area -->
+        <main class="flex-grow overflow-y-auto no-scrollbar">
+            
+            <!-- Screen 1: Search (Home) -->
+            <div id="screen-search" class="p-6 space-y-6">
+                <header class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Здравствуйте,</p>
+                        <h1 class="text-xl font-bold text-dark-charcoal">Test User</h1>
+                    </div>
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-2 text-gray-500"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                    </div>
+                </header>
+
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input type="text" placeholder="Иероглиф, пиньинь или перевод" onkeyup="handleSearchInput(this)" class="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-vibrant-red transition-shadow shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                
+                <!-- Search History -->
+                <div>
+                    <h2 class="text-md font-semibold mb-3">История поиска</h2>
+                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                        <span class="bg-gray-200/50 text-dark-charcoal px-4 py-1.5 rounded-full text-sm cursor-pointer whitespace-nowrap chinese-serif">你好</span>
+                        <span class="bg-gray-200/50 text-dark-charcoal px-4 py-1.5 rounded-full text-sm cursor-pointer whitespace-nowrap chinese-serif">爱</span>
+                        <span class="bg-gray-200/50 text-dark-charcoal px-4 py-1.5 rounded-full text-sm cursor-pointer whitespace-nowrap chinese-serif">家</span>
+                        <span class="bg-gray-200/50 text-dark-charcoal px-4 py-1.5 rounded-full text-sm cursor-pointer whitespace-nowrap chinese-serif">学习</span>
+                    </div>
+                </div>
+
+                <!-- Word of the Day -->
+                <div onclick="showCharacterDetail('search')" class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200/50 rounded-2xl p-5 text-dark-charcoal cursor-pointer hover:shadow-md transition-shadow">
+                    <h2 class="text-md font-semibold mb-2">Слово дня</h2>
+                    <div class="flex items-center gap-4">
+                        <p class="chinese-serif text-5xl text-vibrant-red">道</p>
+                        <div>
+                            <p class="font-semibold text-lg">dào</p>
+                            <p class="text-gray-600">путь, дорога; Дао</p>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Character Detail Example (click to view) -->
+                <div onclick="showCharacterDetail('search')" class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                    <h2 class="text-md font-semibold mb-3">Пример карточки</h2>
+                     <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <p class="chinese-serif text-4xl">爱</p>
+                            <div>
+                                <p class="font-semibold text-md">ài</p>
+                                <p class="text-gray-500 text-sm">любить; любовь</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Hidden Screen: Search Results -->
+            <div id="screen-search-results" class="hidden p-6 space-y-4">
+                <header class="flex items-center gap-4 mb-2">
+                   <button onclick="hideSearchResults()" class="p-2 rounded-full hover:bg-gray-200/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                   </button>
+                    <h1 class="text-xl font-bold">Результаты поиска</h1>
+                </header>
+                <p class="text-sm text-gray-500 pl-12 -mt-4">Найдено 3 результата для "привет"</p>
+                <div class="space-y-3">
+                    <div onclick="showCharacterDetail('search-results')" class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <p class="chinese-serif text-3xl">你好</p>
+                                <div>
+                                    <p class="font-semibold text-md">nǐ hǎo</p>
+                                    <p class="text-gray-500 text-sm">привет; здравствуй(те)</p>
+                                </div>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                        </div>
+                    </div>
+                    <div onclick="showCharacterDetail('search-results')" class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <p class="chinese-serif text-3xl">您好</p>
+                                <div>
+                                    <p class="font-semibold text-md">nín hǎo</p>
+                                    <p class="text-gray-500 text-sm">здравствуйте (уважительно)</p>
+                                </div>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hidden Screen: Character Detail -->
+            <div id="screen-character-detail" class="hidden p-6 space-y-6">
+                 <header class="flex items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-4">
+                       <button onclick="hideCharacterDetail()" class="p-2 rounded-full hover:bg-gray-200/50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                       </button>
+                        <h1 class="text-xl font-bold">Детали иероглифа</h1>
+                    </div>
+                    <button onclick="showAddToCollectionModal()" class="p-2 rounded-full hover:bg-gray-200/50 text-gray-500 hover:text-vibrant-red transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bookmark-plus"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><line x1="12" x2="12" y1="7" y2="13"/><line x1="9" x2="15" y1="10" y2="10"/></svg>
+                    </button>
+                </header>
+                <div class="text-center bg-white rounded-2xl p-6 shadow-sm border border-gray-200/80">
+                    <p class="chinese-serif text-8xl text-vibrant-red">爱</p>
+                    <div class="flex items-center justify-center gap-2 mt-2">
+                        <p class="text-2xl font-semibold">ài</p>
+                        <button class="text-gray-500 hover:text-vibrant-red">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                        </button>
+                    </div>
+                </div>
+                 <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
+                    <div class="grid grid-cols-3 text-center divide-x">
+                        <div>
+                            <p class="text-sm text-gray-500">Радикал</p>
+                            <p class="font-semibold text-lg">爪</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Черты</p>
+                            <p class="font-semibold text-lg">10</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">HSK</p>
+                            <p class="font-semibold text-lg text-jade-green">1</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                     <div class="flex border-b">
+                        <button class="px-4 py-2 text-vibrant-red border-b-2 border-vibrant-red font-semibold">Определения</button>
+                        <button class="px-4 py-2 text-gray-500 font-semibold">Примеры</button>
+                     </div>
+                     <div class="pt-4 space-y-3">
+                        <p>1. любить; любовь</p>
+                        <p>2. нравиться; быть склонным к</p>
+                        <p>3. дорожить; беречь</p>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Screen 2: Analyze -->
+            <div id="screen-analyze" class="hidden p-6 space-y-4">
+                 <header class="mb-2">
+                    <h1 class="text-2xl font-bold text-dark-charcoal">Анализ текста</h1>
+                    <p class="text-gray-500">Вставьте текст для анализа</p>
+                </header>
+                 <textarea id="analyze-textarea" class="w-full h-64 p-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-vibrant-red transition-shadow shadow-sm" placeholder="我爱学中文..."></textarea>
+                 <div class="flex items-center gap-3">
+                     <button class="flex-1 bg-gray-200/80 hover:bg-gray-300/80 text-dark-charcoal font-semibold py-3 px-4 rounded-xl transition-colors">Вставить</button>
+                     <button class="flex-1 bg-white border border-gray-200 hover:bg-gray-100 text-dark-charcoal font-semibold py-3 px-4 rounded-xl transition-colors" onclick="document.getElementById('analyze-textarea').value = ''">Очистить</button>
+                 </div>
+                 <button onclick="showAnalysisResults()" class="w-full bg-vibrant-red text-white font-bold py-4 px-4 rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all">Анализировать</button>
+            </div>
+            
+            <!-- Hidden Screen: Analyze Results -->
+            <div id="screen-analyze-results" class="hidden p-6 space-y-4">
+                 <header class="flex items-center gap-4 mb-2">
+                   <button onclick="hideAnalysisResults()" class="p-2 rounded-full hover:bg-gray-200/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                   </button>
+                    <h1 class="text-xl font-bold">Результаты анализа</h1>
+                </header>
+                <div class="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm">
+                    <p class="chinese-serif text-lg leading-loose">
+                        <span class="text-vibrant-red cursor-pointer">我</span> 
+                        <span class="text-jade-green cursor-pointer">爱</span> 
+                        <span class="text-blue-500 cursor-pointer">学</span> 
+                        <span class="text-purple-500 cursor-pointer">中文</span>
+                    </p>
+                </div>
+                <div class="space-y-4">
+                    <!-- Card 1 -->
+                    <div onclick="showCharacterDetail('analyze-results')" class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex items-start gap-4">
+                           <p class="chinese-serif text-4xl text-vibrant-red">我</p>
+                           <div>
+                                <p class="font-semibold">wǒ</p>
+                                <p class="text-gray-500">я; мой</p>
+                           </div>
+                        </div>
+                        <div class="mt-3 pl-2 border-l-2 ml-5">
+                            <p class="text-sm text-gray-400">Пример:</p>
+                            <p class="chinese-serif text-gray-600">我是学生。(Wǒ shì xuéshēng.)</p>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div onclick="showCharacterDetail('analyze-results')" class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex items-start gap-4">
+                           <p class="chinese-serif text-4xl text-jade-green">爱</p>
+                           <div>
+                                <p class="font-semibold">ài</p>
+                                <p class="text-gray-500">любить; любовь</p>
+                           </div>
+                        </div>
+                        <div class="mt-3 pl-2 border-l-2 ml-5">
+                            <p class="text-sm text-gray-400">Пример:</p>
+                            <p class="chinese-serif text-gray-600">我爱你。(Wǒ ài nǐ.)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 3: Collections -->
+            <div id="screen-collections" class="hidden p-6 space-y-4">
+                 <header class="mb-2">
+                    <h1 class="text-2xl font-bold text-dark-charcoal">Мои коллекции</h1>
+                    <p class="text-gray-500">Списки слов для изучения</p>
+                </header>
+                <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm space-y-4">
+                    <div onclick="showCollectionDetail()" class="flex items-center justify-between cursor-pointer">
+                        <div>
+                            <h3 class="font-semibold">⭐ Избранное</h3>
+                            <p class="text-sm text-gray-500">12 слов</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                    </div>
+                    <hr>
+                    <div onclick="showCollectionDetail()" class="flex items-center justify-between cursor-pointer">
+                        <div>
+                            <h3 class="font-semibold">📚 HSK 1</h3>
+                            <p class="text-sm text-gray-500">150 / 150 слов</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                    </div>
+                    <hr>
+                    <div onclick="showCollectionDetail()" class="flex items-center justify-between cursor-pointer">
+                        <div>
+                            <h3 class="font-semibold">✈️ Путешествия</h3>
+                            <p class="text-sm text-gray-500">34 слова</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                    </div>
+                </div>
+                 <button onclick="showCreateCollection()" class="w-full border-2 border-dashed border-gray-300 text-gray-500 font-semibold py-3 px-4 rounded-xl hover:bg-gray-200/50 hover:text-dark-charcoal transition-colors">
+                    + Создать коллекцию
+                </button>
+            </div>
+
+            <!-- Hidden Screen: Collection Detail -->
+            <div id="screen-collection-detail" class="hidden p-6 space-y-4">
+                 <header class="flex items-center gap-4 mb-2">
+                   <button onclick="hideCollectionDetail()" class="p-2 rounded-full hover:bg-gray-200/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                   </button>
+                    <h1 class="text-xl font-bold">⭐ Избранное</h1>
+                </header>
+                 <div class="space-y-3">
+                    <div onclick="showCharacterDetail('collection-detail')" class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <p class="chinese-serif text-3xl">爱</p>
+                                <div>
+                                    <p class="font-semibold text-md">ài</p>
+                                    <p class="text-gray-500 text-sm">любить; любовь</p>
+                                </div>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                        </div>
+                    </div>
+                    <div onclick="showCharacterDetail('collection-detail')" class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <p class="chinese-serif text-3xl">家</p>
+                                <div>
+                                    <p class="font-semibold text-md">jiā</p>
+                                    <p class="text-gray-500 text-sm">семья; дом</p>
+                                </div>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Screen: Create Collection -->
+            <div id="screen-create-collection" class="hidden p-6 space-y-6">
+                <header class="flex items-center gap-4 mb-2">
+                   <button onclick="hideCreateCollection()" class="p-2 rounded-full hover:bg-gray-200/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                   </button>
+                    <h1 class="text-xl font-bold">Новая коллекция</h1>
+                </header>
+                <div>
+                    <label for="collection-name" class="font-semibold text-sm mb-2 block">Название</label>
+                    <input type="text" id="collection-name" placeholder="Напр. Еда и напитки" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-vibrant-red transition-shadow shadow-sm">
+                </div>
+                <div class="flex items-center gap-3 pt-4">
+                     <button onclick="hideCreateCollection()" class="flex-1 bg-gray-200/80 hover:bg-gray-300/80 text-dark-charcoal font-semibold py-3 px-4 rounded-xl transition-colors">Отмена</button>
+                     <button onclick="hideCreateCollection()" class="flex-1 bg-vibrant-red text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all">Создать</button>
+                 </div>
+            </div>
+
+
+            <!-- Screen 4: Profile -->
+            <div id="screen-profile" class="hidden p-6 space-y-6">
+                <header class="text-center space-y-2">
+                    <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto ring-4 ring-white shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-2 text-gray-500"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                    </div>
+                    <h1 class="text-2xl font-bold text-dark-charcoal">Test User</h1>
+                    <p class="text-gray-500">test@example.com</p>
+                </header>
+                
+                <!-- Subscription Status -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm text-center space-y-3">
+                    <h2 class="font-semibold">Статус подписки: <span class="text-jade-green">FREE</span></h2>
+                    <p class="text-sm text-gray-500">Осталось 34 из 50 запросов на сегодня</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-jade-green h-2.5 rounded-full" style="width: 68%"></div>
+                    </div>
+                    <button class="w-full bg-vibrant-red text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all mt-2">✨ Улучшить до PREMIUM</button>
+                </div>
+                
+                 <!-- Stats -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
+                    <h2 class="font-semibold mb-3">Статистика</h2>
+                    <div class="grid grid-cols-3 text-center divide-x">
+                        <div>
+                            <p class="font-bold text-xl">128</p>
+                            <p class="text-sm text-gray-500">Слов изучено</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xl">12</p>
+                            <p class="text-sm text-gray-500">Дней подряд</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xl">541</p>
+                            <p class="text-sm text-gray-500">Всего поисков</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="space-y-2">
+                    <button onclick="showSettings()" class="w-full text-left bg-white font-semibold py-3 px-4 rounded-xl hover:bg-gray-100 border border-gray-200/80 flex justify-between items-center">
+                        <span>Настройки</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <button class="w-full text-left bg-white text-vibrant-red font-semibold py-3 px-4 rounded-xl hover:bg-red-50 border border-gray-200/80">Выход</button>
+                </div>
+
+            </div>
+            
+             <!-- Hidden Screen: Settings -->
+            <div id="screen-settings" class="hidden p-6 space-y-6">
+                <header class="flex items-center gap-4 mb-2">
+                   <button onclick="hideSettings()" class="p-2 rounded-full hover:bg-gray-200/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                   </button>
+                    <h1 class="text-xl font-bold">Настройки</h1>
+                </header>
+                <div class="space-y-4">
+                    <div class="bg-white rounded-2xl p-2 border border-gray-200/80 shadow-sm">
+                        <div class="flex items-center justify-between p-3">
+                           <div>
+                                <h3 class="font-semibold">Темная тема</h3>
+                                <p class="text-sm text-gray-500">Скоро</p>
+                           </div>
+                           <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in opacity-50">
+                                <input type="checkbox" name="toggle" id="toggle-dark" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" disabled/>
+                                <label for="toggle-dark" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+                         <hr>
+                        <div class="flex items-center justify-between p-3">
+                           <div>
+                                <h3 class="font-semibold">Уведомления "Слово дня"</h3>
+                           </div>
+                           <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="toggle-notifications" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="toggle-notifications" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="w-full bg-white/80 backdrop-blur-sm border-t border-gray-200/80 grid grid-cols-4">
+            <button id="nav-search" onclick="switchScreen('search')" class="flex flex-col items-center gap-1 p-3 text-vibrant-red">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span class="text-xs font-semibold">Поиск</span>
+            </button>
+            <button id="nav-analyze" onclick="switchScreen('analyze')" class="flex flex-col items-center gap-1 p-3 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-text"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/><path d="M7 17h5"/><path d="M7 7h3"/></svg>
+                <span class="text-xs">Анализ</span>
+            </button>
+            <button id="nav-collections" onclick="switchScreen('collections')" class="flex flex-col items-center gap-1 p-3 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-library"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>
+                <span class="text-xs">Коллекции</span>
+            </button>
+            <button id="nav-profile" onclick="switchScreen('profile')" class="flex flex-col items-center gap-1 p-3 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12"cy="12" r="10"/></svg>
+                <span class="text-xs">Профиль</span>
+            </button>
+        </nav>
+    </div>
+    
+    <!-- Add to Collection Modal -->
+    <div id="modal-add-to-collection" class="hidden absolute inset-0 bg-black/40 flex justify-center items-end" onclick="hideAddToCollectionModal()">
+        <div class="w-full max-w-[420px] bg-off-white rounded-t-3xl p-6 pt-4 space-y-4 animate-slide-up" onclick="event.stopPropagation()">
+            <div class="w-10 h-1.5 bg-gray-300 rounded-full mx-auto mb-3"></div>
+            <h2 class="text-xl font-bold text-center">Добавить в коллекцию</h2>
+            <div id="collection-list-modal" class="space-y-2">
+                <div onclick="addCharacterToCollection(this, 'Избранное')" class="flex items-center justify-between p-4 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                    <span class="font-semibold">⭐ Избранное</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-jade-green hidden"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                 <div onclick="addCharacterToCollection(this, 'HSK 1')" class="flex items-center justify-between p-4 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                    <span class="font-semibold">📚 HSK 1</span>
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-jade-green hidden"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+            </div>
+            <button class="w-full border-2 border-dashed border-gray-300 text-gray-500 font-semibold py-3 px-4 rounded-xl hover:bg-gray-200/50 hover:text-dark-charcoal transition-colors">
+                + Создать новую
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-dark-charcoal text-white px-6 py-3 rounded-full shadow-lg">
+        Добавлено в "Избранное"
+    </div>
+
+    <script>
+        const allScreens = ['search', 'analyze', 'collections', 'profile', 'character-detail', 'search-results', 'analyze-results', 'settings', 'collection-detail', 'create-collection'];
+        const mainScreens = ['search', 'analyze', 'collections', 'profile'];
+        let previousScreenId = 'search';
+        
+        function switchScreen(screenId) {
+            allScreens.forEach(id => document.getElementById(`screen-${id}`)?.classList.add('hidden'));
+            document.getElementById(`screen-${screenId}`)?.classList.remove('hidden');
+
+            mainScreens.forEach(id => {
+                const nav = document.getElementById(`nav-${id}`);
+                if (nav) {
+                    nav.classList.remove('text-vibrant-red', 'font-semibold');
+                    nav.classList.add('text-gray-500');
+                    nav.querySelector('span').classList.remove('font-semibold');
+                }
+            });
+
+            const activeNav = document.getElementById(`nav-${screenId}`);
+            if (activeNav) {
+                activeNav.classList.add('text-vibrant-red');
+                activeNav.classList.remove('text-gray-500');
+                activeNav.querySelector('span').classList.add('font-semibold');
+            }
+        }
+        
+        function showCharacterDetail(fromScreen) {
+            previousScreenId = fromScreen;
+            allScreens.forEach(id => document.getElementById(`screen-${id}`)?.classList.add('hidden'));
+            document.getElementById('screen-character-detail').classList.remove('hidden');
+        }
+
+        function hideCharacterDetail() {
+            document.getElementById('screen-character-detail').classList.add('hidden');
+            document.getElementById(`screen-${previousScreenId}`).classList.remove('hidden');
+        }
+        
+        function handleSearchInput(input) {
+            if (input.value.trim() !== '') {
+                document.getElementById('screen-search').classList.add('hidden');
+                document.getElementById('screen-search-results').classList.remove('hidden');
+            } else {
+                hideSearchResults();
+            }
+        }
+
+        function hideSearchResults() {
+            document.getElementById('screen-search-results').classList.add('hidden');
+            document.getElementById('screen-search').classList.remove('hidden');
+        }
+
+        function showAnalysisResults() {
+            document.getElementById('screen-analyze').classList.add('hidden');
+            document.getElementById('screen-analyze-results').classList.remove('hidden');
+        }
+
+        function hideAnalysisResults() {
+            document.getElementById('screen-analyze-results').classList.add('hidden');
+            document.getElementById('screen-analyze').classList.remove('hidden');
+        }
+
+        function showSettings() {
+            document.getElementById('screen-profile').classList.add('hidden');
+            document.getElementById('screen-settings').classList.remove('hidden');
+        }
+        
+        function hideSettings() {
+            document.getElementById('screen-settings').classList.add('hidden');
+            document.getElementById('screen-profile').classList.remove('hidden');
+        }
+
+        function showCollectionDetail() {
+            document.getElementById('screen-collections').classList.add('hidden');
+            document.getElementById('screen-collection-detail').classList.remove('hidden');
+        }
+
+        function hideCollectionDetail() {
+            document.getElementById('screen-collection-detail').classList.add('hidden');
+            document.getElementById('screen-collections').classList.remove('hidden');
+        }
+
+        function showCreateCollection() {
+            document.getElementById('screen-collections').classList.add('hidden');
+            document.getElementById('screen-create-collection').classList.remove('hidden');
+        }
+
+        function hideCreateCollection() {
+            document.getElementById('screen-create-collection').classList.add('hidden');
+            document.getElementById('screen-collections').classList.remove('hidden');
+        }
+
+        function showAddToCollectionModal() {
+            const modal = document.getElementById('modal-add-to-collection');
+            modal.classList.remove('hidden');
+            // Reset checkmarks
+            document.querySelectorAll('#collection-list-modal .lucide-check').forEach(check => check.classList.add('hidden'));
+        }
+
+        function hideAddToCollectionModal() {
+            const modal = document.getElementById('modal-add-to-collection');
+            modal.classList.add('hidden');
+        }
+        
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast-notification');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('animate-fade-in-out');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('animate-fade-in-out');
+            }, 3000);
+        }
+
+        function addCharacterToCollection(element, collectionName) {
+            const checkmark = element.querySelector('.lucide-check');
+            const isSelected = !checkmark.classList.contains('hidden');
+            
+            // Toggle checkmark
+            checkmark.classList.toggle('hidden');
+
+            if (!isSelected) {
+                showToast(`Добавлено в "${collectionName}"`);
+                setTimeout(hideAddToCollectionModal, 400);
+            } else {
+                 showToast(`Удалено из "${collectionName}"`);
+            }
+        }
+
+
+        // Initial state
+        document.addEventListener('DOMContentLoaded', () => {
+            switchScreen('search');
+        });
+    </script>
+
+</body>
+</html>
+

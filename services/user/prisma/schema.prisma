@@ -21,9 +21,15 @@ enum UserRole {
   MODERATOR
 }
 
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
+  username     String?      @unique
   passwordHash String?
   displayName  String?
   avatarUrl    String?
@@ -37,6 +43,19 @@ model User {
   isActive     Boolean      @default(true)
   emailVerified Boolean     @default(false)
   
+  // Subscription
+  subscriptionTier    SubscriptionTier @default(FREE)
+  dailyRequestsUsed   Int              @default(0)
+  dailyRequestsLimit  Int              @default(50)
+  lastRequestReset    DateTime         @default(now())
+  
+  // Statistics
+  searchCount      Int      @default(0)
+  analysisCount    Int      @default(0)
+  charactersLearned Int     @default(0)
+  studyTimeMinutes Int      @default(0)
+  lastActiveAt     DateTime @default(now())
+  
   // Timestamps
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -44,8 +63,10 @@ model User {
   
   // Relations
   refreshTokens RefreshToken[]
+  collections   Collection[]
   
   @@index([email])
+  @@index([username])
   @@index([provider, providerId])
   @@map("users")
 }
@@ -62,5 +83,50 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
   @@map("refresh_tokens")
+}
+
+// Collection model for organizing characters
+model Collection {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  color       String?  // Hex color for UI
+  icon        String?  // Emoji or icon name
+  
+  isPublic    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  items       CollectionItem[]
+  
+  @@index([userId])
+  @@index([userId, sortOrder])
+  @@map("collections")
+}
+
+// Many-to-many relationship between collections and characters
+model CollectionItem {
+  id           String   @id @default(uuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  
+  characterId  String   // ID from dictionary service
+  
+  // User notes for this character in this collection
+  notes        String?
+  
+  addedAt      DateTime @default(now())
+  sortOrder    Int      @default(0)
+  
+  @@unique([collectionId, characterId])
+  @@index([collectionId])
+  @@index([characterId])
+  @@map("collection_items")
 }
 

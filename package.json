@@ -1,7 +1,7 @@
 {
-  "name": "guide-for-china",
+  "name": "hanguide",
   "version": "1.0.0",
-  "description": "Китайско-русский словарь нового поколения",
+  "description": "HanGuide - Китайско-русский словарь нового поколения",
   "private": true,
   "workspaces": [
     "services/*",
@@ -21,6 +21,8 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2"
   }
 }
-

@@ -216,7 +216,7 @@ async function importRussianChinese(): Promise<void> {
 }
 
 /**
- * Import examples dictionary
+ * Import examples dictionary with optimized batch processing
  */
 async function importExamples(): Promise<void> {
   const parser = createDslParser();
@@ -226,73 +226,89 @@ async function importExamples(): Promise<void> {
   console.log(`   File: ${filePath}\n`);
 
   let processed = 0;
-  const batchSize = 100;
+  const batchSize = 1000; // Increased batch size for better performance
   let batch: DslEntry[] = [];
 
   for await (const entry of parser.parseFile(filePath)) {
     batch.push(entry);
 
     if (batch.length >= batchSize) {
-      // Process batch
-      for (const ex of batch) {
-        try {
-          if (!ex.simplified) continue;
-
-          // Find corresponding character
-          const character = await prisma.character.findUnique({
-            where: { simplified: ex.simplified },
-          });
-
-          if (character && ex.definitions.length > 0) {
-            // Use first definition as example
-            const def = ex.definitions[0];
-            await prisma.example.create({
-              data: {
-                characterId: character.id,
-                chinese: ex.headword,
-                russian: def.translation,
-              },
-            });
-            processed++;
-          }
-        } catch (error) {
-          // Skip duplicates and errors
-        }
-      }
-
+      await processExamplesBatch(batch);
+      processed += batch.length;
       batch = [];
-      process.stdout.write(`\r  Examples added: ${processed.toLocaleString()}`);
+      
+      const elapsed = (Date.now() - stats.startTime) / 1000;
+      const rate = processed / elapsed;
+      process.stdout.write(`\r  Examples processed: ${processed.toLocaleString()} | Rate: ${rate.toFixed(0)} entries/sec`);
     }
   }
 
-  // Process remaining
+  // Process remaining entries
   if (batch.length > 0) {
-    for (const ex of batch) {
-      try {
-        if (!ex.simplified) continue;
+    await processExamplesBatch(batch);
+    processed += batch.length;
+  }
 
-        const character = await prisma.character.findUnique({
-          where: { simplified: ex.simplified },
-        });
+  console.log(`\n✅ Examples dictionary imported! (${processed.toLocaleString()} examples processed)\n`);
+}
 
-        if (character && ex.definitions.length > 0) {
-          const def = ex.definitions[0];
-          await prisma.example.create({
-            data: {
-              characterId: character.id,
-              chinese: ex.headword,
-              russian: def.translation,
-            },
-          });
-          processed++;
-        }
-      } catch (error) {
-        // Skip duplicates and errors
-      }
+/**
+ * Process a batch of examples with optimized queries
+ */
+async function processExamplesBatch(entries: DslEntry[]): Promise<void> {
+  // Extract all unique simplified characters from the batch
+  const simplifiedChars = [...new Set(
+    entries
+      .filter(entry => entry.simplified)
+      .map(entry => entry.simplified!)
+  )];
+
+  if (simplifiedChars.length === 0) return;
+
+  // Batch fetch all characters at once
+  const characters = await prisma.character.findMany({
+    where: {
+      simplified: { in: simplifiedChars }
+    },
+    select: { id: true, simplified: true }
+  });
+
+  // Create a map for quick lookup
+  const charMap = new Map(
+    characters.map(char => [char.simplified, char.id])
+  );
+
+  // Prepare examples for batch insert
+  const examplesToInsert = [];
+
+  for (const entry of entries) {
+    try {
+      if (!entry.simplified || !entry.definitions.length) continue;
+
+      const characterId = charMap.get(entry.simplified);
+      if (!characterId) continue;
+
+      // Use first definition as example
+      const def = entry.definitions[0];
+      examplesToInsert.push({
+        characterId,
+        chinese: entry.headword,
+        russian: def.translation,
+        pinyin: entry.pinyin || null,
+      });
+    } catch (error) {
+      // Skip errors silently
     }
   }
 
-  console.log(`\n✅ Examples dictionary imported! (${processed.toLocaleString()} examples added)\n`);
+  // Batch insert all examples
+  if (examplesToInsert.length > 0) {
+    await prisma.example.createMany({
+      data: examplesToInsert,
+      skipDuplicates: true,
+    });
+    stats.totalExamples += examplesToInsert.length;
+  }
 }
 
 /**

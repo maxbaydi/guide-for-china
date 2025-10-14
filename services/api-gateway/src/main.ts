@@ -5,26 +5,30 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Глобальная валидация
+  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
       transform: true,
+      forbidNonWhitelisted: true,
     }),
   );
 
-  // CORS
+  // CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env.CORS_ORIGIN?.split(',') || '*',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 4000;
   await app.listen(port);
 
-  console.log(`🚀 API Gateway запущен на http://localhost:${port}`);
-  console.log(`📊 GraphQL Playground: http://localhost:${port}/graphql`);
+  console.log(`\n🚀 HanGuide API Gateway is running on: http://localhost:${port}`);
+  console.log(`📊 Health check: http://localhost:${port}/health`);
+  console.log(`🔐 Auth endpoints: http://localhost:${port}/api/v1/auth/*`);
+  console.log(`📚 Dictionary endpoints: http://localhost:${port}/api/v1/dictionary/*\n`);
 }
 
 bootstrap();

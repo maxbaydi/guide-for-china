@@ -74,11 +74,15 @@ services:
       PORT: 4002
       NODE_ENV: ${NODE_ENV:-development}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      DICTIONARY_SERVICE_HOST: ${DICTIONARY_SERVICE_HOST:-dictionary-service}
+      DICTIONARY_SERVICE_PORT: ${DICTIONARY_SERVICE_PORT:-4001}
     ports:
       - "4002:4002"
     depends_on:
       postgres:
         condition: service_healthy
+      dictionary-service:
+        condition: service_started
     networks:
       - guide-network
     restart: unless-stopped
@@ -98,6 +102,36 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - guide-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: guide-api-gateway
+    environment:
+      PORT: 4000
+      NODE_ENV: ${NODE_ENV:-development}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:4002/graphql}
+      DICTIONARY_SERVICE_URL: ${DICTIONARY_SERVICE_URL:-http://dictionary-service:4001/}
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-super-secret-key}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-in-production-refresh-secret}
+    ports:
+      - "4000:4000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      dictionary-service:
+        condition: service_started
     networks:
       - guide-network
     restart: unless-stopped
