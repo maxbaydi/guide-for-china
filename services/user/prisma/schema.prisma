@@ -1,0 +1,66 @@
+// Prisma schema for User Service
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String?
+  displayName  String?
+  avatarUrl    String?
+  
+  // OAuth fields
+  provider     AuthProvider @default(EMAIL)
+  providerId   String?
+  
+  // User info
+  role         UserRole     @default(USER)
+  isActive     Boolean      @default(true)
+  emailVerified Boolean     @default(false)
+  
+  // Timestamps
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  lastLoginAt  DateTime?
+  
+  // Relations
+  refreshTokens RefreshToken[]
+  
+  @@index([email])
+  @@index([provider, providerId])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+

@@ -59,6 +59,49 @@ services:
     networks:
       - guide-network
 
+  # User Service
+  user-service:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    container_name: guide-user-service
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-chinese_guide}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-super-secret-key}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-in-production-refresh-secret}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      PORT: 4002
+      NODE_ENV: ${NODE_ENV:-development}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    ports:
+      - "4002:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - guide-network
+    restart: unless-stopped
+
+  # Dictionary Service
+  dictionary-service:
+    build:
+      context: ./services/dictionary
+      dockerfile: Dockerfile
+    container_name: guide-dictionary-service
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-chinese_guide}
+      PORT: 4001
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - guide-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     driver: local
