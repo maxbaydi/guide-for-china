@@ -34,7 +34,8 @@
     "emptyDescription": "Введите иероглиф, пиньинь или русский перевод",
     "tryDifferentQuery": "Попробуйте изменить запрос",
     "greeting": "Здравствуйте",
-    "searchButton": "Найти"
+    "searchButton": "Найти",
+    "wordOfTheDayUnavailable": "Слово дня временно недоступно"
   },
   "character": {
     "details": "Детали иероглифа",
@@ -48,7 +49,8 @@
     "definitions": "Определения",
     "examples": "Примеры",
     "addToCollection": "Добавить в коллекцию",
-    "noExamples": "Примеры отсутствуют"
+    "noExamples": "Примеры отсутствуют",
+    "noTranslation": "Нет перевода"
   },
   "analyze": {
     "title": "Анализ текста",
@@ -58,10 +60,8 @@
     "pasteButton": "Вставить",
     "clearButton": "Очистить",
     "results": "Результаты анализа",
-    "example": "Пример:",
     "charactersFound": "Найдено {{count}} иероглифов",
-    "saveAll": "Сохранить все",
-    "edit": "Редактировать"
+    "characterCount": "{{count}} / {{max}} символов"
   },
   "collections": {
     "title": "Мои коллекции",
@@ -82,7 +82,8 @@
     "addedTo": "Добавлено в \"{{name}}\"",
     "removedFrom": "Удалено из \"{{name}}\"",
     "createButton": "Создать",
-    "notFound": "Коллекция не найдена"
+    "notFound": "Коллекция не найдена",
+    "selectCollection": "Выберите коллекцию"
   },
   "profile": {
     "title": "Профиль",
@@ -121,7 +122,15 @@
     "invalidCredentials": "Неверный email или пароль",
     "accountDeactivated": "Аккаунт деактивирован",
     "userAlreadyExists": "Пользователь с таким email уже существует",
-    "passwordRequirements": "Минимум 8 символов, заглавная и строчная буквы, цифра и спецсимвол"
+    "passwordRequirements": "Минимум 8 символов, заглавная и строчная буквы, цифра и спецсимвол",
+    "settingsSaveFailed": "Не удалось сохранить настройку",
+    "languageChangeFailed": "Не удалось изменить язык",
+    "usernameTooShort": "Имя пользователя должно содержать минимум 3 символа",
+    "usernameTooLong": "Имя пользователя не может быть длиннее 50 символов",
+    "usernameInvalidChars": "Имя пользователя может содержать только буквы, цифры и подчеркивания",
+    "noChanges": "Нет изменений для сохранения",
+    "sessionExpired": "Сессия истекла. Пожалуйста, войдите снова",
+    "textTooLong": "Текст слишком длинный. Максимум {{max}} символов"
   },
   "common": {
     "save": "Сохранить",
@@ -149,7 +158,13 @@
     "profileUpdated": "Профиль обновлен",
     "passwordChanged": "Пароль успешно изменен",
     "darkTheme": "Темная тема",
-    "wordOfTheDay": "Слово дня"
+    "wordOfTheDay": "Слово дня",
+    "language": "Язык",
+    "languageDescription": "Выберите язык интерфейса",
+    "russian": "Русский",
+    "chinese": "中文",
+    "usernameHelperText": "Только буквы, цифры и подчеркивания (3-50 символов)",
+    "wordOfTheDayDescription": "Показывать слово дня на главном экране"
   }
 }
 

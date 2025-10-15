@@ -86,7 +86,7 @@ export default function AnalyzeResultsScreen() {
             <Text style={styles.originalText}>
               {analysisData.map((item, index) => (
                 <Text
-                  key={index}
+                  key={`char-${index}-${item.character}`}
                   style={[
                     styles.characterSpan,
                     { color: item.details ? getCharColor(index) : Colors.textLight }
@@ -109,7 +109,7 @@ export default function AnalyzeResultsScreen() {
             .filter((item) => item.details) // Показываем только иероглифы с данными
             .map((item, index) => (
             <Card
-              key={index}
+              key={`card-${index}-${item.details?.id || item.character}`}
               style={styles.characterCard}
               onPress={() => {
                 if (item.details?.id) {

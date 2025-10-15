@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { api } from '../services/api';
 import { Character } from '../types/api.types';
@@ -11,6 +12,7 @@ import { CharacterCard } from '../components/ui/CharacterCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Colors } from '../constants/Colors';
 
+const SEARCH_HISTORY_LIMIT = 5;
 
 export default function SearchResultsScreen() {
   const { t } = useTranslation();
@@ -33,6 +35,31 @@ export default function SearchResultsScreen() {
     },
     enabled: !!query,
   });
+
+  // Сохранение в историю поиска при успешном поиске
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0 && query) {
+      saveToSearchHistory(query);
+    }
+  }, [searchResults, query]);
+
+  const saveToSearchHistory = async (searchQuery: string) => {
+    try {
+      const history = await AsyncStorage.getItem('searchHistory');
+      let historyArray: string[] = history ? JSON.parse(history) : [];
+      
+      // Удаляем дубликаты и добавляем в начало
+      historyArray = historyArray.filter(item => item !== searchQuery);
+      historyArray.unshift(searchQuery);
+      
+      // Ограничиваем до 5 элементов
+      historyArray = historyArray.slice(0, SEARCH_HISTORY_LIMIT);
+      
+      await AsyncStorage.setItem('searchHistory', JSON.stringify(historyArray));
+    } catch (error) {
+      console.error('Failed to save search history:', error);
+    }
+  };
   
   return (
     <View style={styles.container}>

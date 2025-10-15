@@ -1,0 +1,252 @@
+// Полная Prisma схема для базы данных chinese_guide
+// Эта схема включает все таблицы из обоих микросервисов (Dictionary и User)
+// Используется как справочная документация полной структуры БД
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// ENUMS (из User Service)
+// ===========================================
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+}
+
+// ===========================================
+// USER SERVICE MODELS
+// ===========================================
+
+// Основная модель пользователя
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  username     String?      @unique
+  passwordHash String?
+  displayName  String?
+  avatarUrl    String?
+  
+  // OAuth поля
+  provider     AuthProvider @default(EMAIL)
+  providerId   String?
+  
+  // Информация о пользователе
+  role         UserRole     @default(USER)
+  isActive     Boolean      @default(true)
+  emailVerified Boolean     @default(false)
+  
+  // Подписка и лимиты
+  subscriptionTier    SubscriptionTier @default(FREE)
+  dailyRequestsUsed   Int              @default(0)
+  dailyRequestsLimit  Int              @default(50)
+  lastRequestReset    DateTime         @default(now())
+  
+  // Статистика пользователя
+  searchCount       Int      @default(0)
+  analysisCount     Int      @default(0)
+  charactersLearned Int      @default(0)
+  studyTimeMinutes  Int      @default(0)
+  lastActiveAt      DateTime @default(now())
+  
+  // Временные метки
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+  
+  // Связи
+  refreshTokens RefreshToken[]
+  collections   Collection[]
+  
+  @@index([email])
+  @@index([username])
+  @@index([provider, providerId])
+  @@index([lastActiveAt])
+  @@index([createdAt])
+  @@index([subscriptionTier, isActive])
+  @@map("users")
+}
+
+// Refresh токены для аутентификации
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// Коллекции пользователя для организации иероглифов
+model Collection {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  color       String?  // Hex цвет для UI
+  icon        String?  // Emoji или название иконки
+  
+  isPublic    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Связи
+  items       CollectionItem[]
+  
+  @@index([userId])
+  @@index([userId, sortOrder])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([isPublic])
+  @@map("collections")
+}
+
+// Связь many-to-many между коллекциями и иероглифами
+model CollectionItem {
+  id           String   @id @default(uuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  
+  characterId  String   // ID из dictionary service
+  
+  // Заметки пользователя для этого иероглифа в этой коллекции
+  notes        String?
+  
+  addedAt      DateTime @default(now())
+  sortOrder    Int      @default(0)
+  
+  @@unique([collectionId, characterId])
+  @@index([collectionId])
+  @@index([characterId])
+  @@index([collectionId, addedAt(sort: Desc)])
+  @@map("collection_items")
+}
+
+// ===========================================
+// DICTIONARY SERVICE MODELS
+// ===========================================
+
+// Основная модель китайского иероглифа/слова
+model Character {
+  id           String   @id @default(uuid())
+  simplified   String   @unique
+  traditional  String?
+  pinyin       String?
+  hskLevel     Int?     // Уровень HSK (1-6)
+  frequency    Int?     // Ранг частотности
+  searchVector Unsupported("tsvector")?  // Вектор для полнотекстового поиска
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Связи
+  definitions  Definition[]
+  examples     Example[]
+  
+  @@index([simplified])
+  @@index([pinyin])
+  @@map("characters")
+}
+
+// Определение/перевод иероглифа
+model Definition {
+  id           String    @id @default(uuid())
+  characterId  String
+  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  translation  String    @db.Text
+  partOfSpeech String?   // Часть речи: "глагол", "существительное" и т.д.
+  context      String?   // Контекст: "перен.", "устар." и т.д.
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  
+  @@index([characterId])
+  @@index([characterId, order])
+  @@map("definitions")
+}
+
+// Пример использования иероглифа
+model Example {
+  id          String    @id @default(uuid())
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  chinese     String    @db.Text
+  pinyin      String?   @db.Text
+  russian     String    @db.Text
+  source      String?   // Источник примера
+  createdAt   DateTime  @default(now())
+  
+  @@index([characterId])
+  @@index([characterId, createdAt(sort: Desc)])
+  @@map("examples")
+}
+
+// Модель фраз для русско-китайского словаря (обратный поиск)
+model Phrase {
+  id           String   @id @default(uuid())
+  russian      String   @db.Text
+  chinese      String   @db.Text
+  pinyin       String?  @db.Text
+  context      String?
+  searchVector Unsupported("tsvector")?  // Вектор для полнотекстового поиска
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([russian])
+  @@map("phrases")
+}
+
+// ===========================================
+// КОММЕНТАРИИ К СТРУКТУРЕ БД
+// ===========================================
+
+// ИНДЕКСЫ:
+// - Все внешние ключи автоматически индексируются
+// - Поля поиска (email, username, simplified, pinyin) индексированы
+// - Композитные индексы для часто используемых запросов
+// - GIN индексы для полнотекстового поиска (search_vector)
+// - Индексы производительности для сортировки и фильтрации
+
+// СВЯЗИ:
+// - User -> RefreshToken: один-ко-многим (каскадное удаление)
+// - User -> Collection: один-ко-многим (каскадное удаление)
+// - Collection -> CollectionItem: один-ко-многим (каскадное удаление)
+// - Character -> Definition: один-ко-многим (каскадное удаление)
+// - Character -> Example: один-ко-многим (каскадное удаление)
+
+// ОСОБЕННОСТИ:
+// 1. searchVector: использует pg_jieba для китайского текста
+// 2. CollectionItem.characterId: мягкая ссылка на Character (нет FK)
+//    Это сделано для разделения микросервисов
+// 3. Все timestamp поля используют timezone-aware типы
+// 4. Каскадное удаление для всех зависимостей
+
+// МИКРОСЕРВИСНАЯ АРХИТЕКТУРА:
+// - Dictionary Service: Character, Definition, Example, Phrase
+// - User Service: User, RefreshToken, Collection, CollectionItem
+// - Общая база данных с логическим разделением
+

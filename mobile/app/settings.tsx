@@ -3,12 +3,13 @@ import { ScrollView, View, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Text, Card, Switch, TextInput, Button } from 'react-native-paper';
+import { Text, Card, Switch, TextInput, Button, SegmentedButtons } from 'react-native-paper';
 import { useMutation, gql } from '@apollo/client';
 import { useAuth } from '../hooks/useAuth';
 import { Colors } from '../constants/Colors';
 import { showSuccess, showError } from '../utils/toast';
 import { getErrorMessage } from '../utils/errorHandler';
+import { saveLanguage } from '../services/i18n';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -26,7 +27,7 @@ const CHANGE_PASSWORD = gql`
 `;
 
 export default function SettingsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   
@@ -47,6 +48,7 @@ export default function SettingsScreen() {
   
   // UI state
   const [isWordOfDayEnabled, setIsWordOfDayEnabled] = useState(true);
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'ru');
   const { refreshUser } = useAuth();
 
   // Load word of day setting from AsyncStorage
@@ -71,7 +73,20 @@ export default function SettingsScreen() {
       await AsyncStorage.setItem('wordOfDayEnabled', JSON.stringify(value));
     } catch (error) {
       console.error('Failed to save word of day setting:', error);
-      showError('Не удалось сохранить настройку');
+      showError(t('errors.settingsSaveFailed'));
+    }
+  };
+
+  // Handle language change
+  const handleLanguageChange = async (language: string) => {
+    try {
+      setCurrentLanguage(language);
+      await i18n.changeLanguage(language);
+      await saveLanguage(language);
+      showSuccess(t('settings.profileUpdated'));
+    } catch (error) {
+      console.error('Failed to change language:', error);
+      showError(t('errors.languageChangeFailed'));
     }
   };
 
@@ -121,19 +136,19 @@ export default function SettingsScreen() {
       const trimmedUsername = username.trim();
       
       if (trimmedUsername.length < 3) {
-        showError('Имя пользователя должно содержать минимум 3 символа');
+        showError(t('errors.usernameTooShort'));
         return;
       }
       
       if (trimmedUsername.length > 50) {
-        showError('Имя пользователя не может быть длиннее 50 символов');
+        showError(t('errors.usernameTooLong'));
         return;
       }
       
       // Проверка на допустимые символы
       const usernameRegex = /^[a-zA-Z0-9_]+$/;
       if (!usernameRegex.test(trimmedUsername)) {
-        showError('Имя пользователя может содержать только буквы, цифры и подчеркивания');
+        showError(t('errors.usernameInvalidChars'));
         return;
       }
       
@@ -143,7 +158,7 @@ export default function SettingsScreen() {
     if (Object.keys(input).length > 0) {
       updateProfile({ variables: { input } });
     } else {
-      showError('Нет изменений для сохранения');
+      showError(t('errors.noChanges'));
     }
   };
 
@@ -195,7 +210,7 @@ export default function SettingsScreen() {
             autoCapitalize="none"
           />
           <Text variant="bodySmall" style={styles.helperText}>
-            Только буквы, цифры и подчеркивания (3-50 символов)
+            {t('settings.usernameHelperText')}
           </Text>
           <Button 
             mode="contained" 
@@ -266,9 +281,34 @@ export default function SettingsScreen() {
       
       <Card style={styles.card}>
         <View style={styles.settingItem}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('settings.language')}</Text>
+            <Text style={styles.settingDescription}>{t('settings.languageDescription')}</Text>
+          </View>
+        </View>
+        <View style={styles.languageSwitcher}>
+          <SegmentedButtons
+            value={currentLanguage}
+            onValueChange={handleLanguageChange}
+            buttons={[
+              {
+                value: 'ru',
+                label: t('settings.russian'),
+                icon: 'flag',
+              },
+              {
+                value: 'zh',
+                label: t('settings.chinese'),
+                icon: 'flag',
+              },
+            ]}
+          />
+        </View>
+        
+        <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingLabel}>{t('settings.wordOfTheDay')}</Text>
-            <Text style={styles.settingDescription}>Показывать слово дня на главном экране</Text>
+            <Text style={styles.settingDescription}>{t('settings.wordOfTheDayDescription')}</Text>
           </View>
           <Switch 
             value={isWordOfDayEnabled} 
@@ -338,5 +378,9 @@ const styles = StyleSheet.create({
   settingDescription: {
     color: Colors.textLight,
     fontSize: 12,
+  },
+  languageSwitcher: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
 });

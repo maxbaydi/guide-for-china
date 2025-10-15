@@ -62,11 +62,22 @@ export class DictionaryController {
   @Get('character/:id')
   async getCharacter(@Param('id') id: string) {
     try {
-      return await this.dictionaryService.getCharacter(id);
+      const character = await this.dictionaryService.getCharacter(id);
+      
+      if (!character) {
+        this.logger.warn(`Character not found: ${id}`);
+        throw new HttpException(
+          'Character not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      
+      return character;
     } catch (error) {
+      this.logger.error(`Failed to get character ${id}: ${error.message}`, error.stack);
       throw new HttpException(
         error.message || 'Character not found',
-        HttpStatus.NOT_FOUND,
+        error.status || HttpStatus.NOT_FOUND,
       );
     }
   }
@@ -79,6 +90,14 @@ export class DictionaryController {
     if (!text) {
       throw new HttpException(
         'Query parameter "text" is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Валидация длины текста
+    if (text.length > 300) {
+      throw new HttpException(
+        'Text is too long. Maximum 300 characters allowed.',
         HttpStatus.BAD_REQUEST,
       );
     }

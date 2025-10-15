@@ -59,6 +59,11 @@ export class DictionaryResolver {
   async analyzeText(
     @Args('text', { type: () => String }) text: string,
   ): Promise<CharacterAnalysis[]> {
+    // Валидация длины текста
+    if (text.length > 300) {
+      throw new Error('Text is too long. Maximum 300 characters allowed.');
+    }
+    
     return this.dictionaryService.analyzeText(text);
   }
 
