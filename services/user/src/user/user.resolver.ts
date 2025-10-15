@@ -40,7 +40,9 @@ export class UserResolver {
   @Query(() => User, { name: 'me' })
   @UseGuards(JwtAuthGuard)
   async getCurrentUser(@CurrentUser() user: User): Promise<User> {
-    return user;
+    // Возвращаем пользователя с актуальным счетчиком запросов из Redis
+    const userWithRateLimits = await this.userService.findByIdWithRateLimits(user.id);
+    return userWithRateLimits || user;
   }
 
   @Query(() => User, { nullable: true })

@@ -100,6 +100,8 @@
     "totalSearches": "Всего поисков",
     "studyMinutes": "Минут",
     "requestsRemaining": "Осталось {{remaining}} из {{total}} запросов на сегодня",
+    "requestsRemainingDaily": "Осталось запросов: {{remaining}} из {{total}}",
+    "dailyLimitInfo": "Лимит сбрасывается каждый день в полночь",
     "settings": "Настройки",
     "darkMode": "Темная тема",
     "notifications": "Уведомления \"Слово дня\"",

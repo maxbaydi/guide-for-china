@@ -5,9 +5,10 @@ import { UserResolver } from './user.resolver';
 import { CollectionService } from './services/collection.service';
 import { CollectionResolver } from './resolvers/collection.resolver';
 import { CollectionItemResolver } from './resolvers/collection-item.resolver';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, RedisModule],
   providers: [
     UserService,
     UserResolver,

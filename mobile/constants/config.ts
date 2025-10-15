@@ -62,7 +62,7 @@ console.log('  Platform:', Platform.OS);
 export const API_CONFIG = {
   BASE_URL: baseUrl,
   GRAPHQL_URL: graphqlUrl,
-  TIMEOUT: 10000, // 10 секунд
+  TIMEOUT: 30000, // 30 секунд
 };
 
 export const APP_CONFIG = {

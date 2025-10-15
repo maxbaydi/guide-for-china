@@ -35,9 +35,46 @@ api.interceptors.request.use(
   }
 );
 
+// Глобальный объект для хранения rate limits
+export const rateLimits = {
+  limit: 50,
+  remaining: 50,
+  reset: Date.now(),
+  listeners: [] as Array<(limits: { limit: number; remaining: number; reset: number }) => void>,
+  
+  update(limit: number, remaining: number, reset: number) {
+    this.limit = limit;
+    this.remaining = remaining;
+    this.reset = reset;
+    this.listeners.forEach(listener => listener({ limit, remaining, reset }));
+  },
+  
+  subscribe(listener: (limits: { limit: number; remaining: number; reset: number }) => void) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+};
+
 // Response interceptor - обработка ошибок и refresh token
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Читаем заголовки rate-limit из ответа
+    const limit = response.headers['x-ratelimit-limit'];
+    const remaining = response.headers['x-ratelimit-remaining'];
+    const reset = response.headers['x-ratelimit-reset'];
+    
+    if (limit && remaining && reset) {
+      rateLimits.update(
+        parseInt(limit, 10),
+        parseInt(remaining, 10),
+        parseInt(reset, 10)
+      );
+    }
+    
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean; skipErrorToast?: boolean };
 

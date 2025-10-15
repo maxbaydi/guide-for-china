@@ -68,6 +68,9 @@ model User {
   @@index([email])
   @@index([username])
   @@index([provider, providerId])
+  @@index([lastActiveAt])
+  @@index([createdAt])
+  @@index([subscriptionTier, isActive])
   @@map("users")
 }
 
@@ -107,6 +110,8 @@ model Collection {
   
   @@index([userId])
   @@index([userId, sortOrder])
+  @@index([userId, createdAt])
+  @@index([isPublic])
   @@map("collections")
 }
 
@@ -127,6 +132,7 @@ model CollectionItem {
   @@unique([collectionId, characterId])
   @@index([collectionId])
   @@index([characterId])
+  @@index([collectionId, addedAt])
   @@map("collection_items")
 }
 
