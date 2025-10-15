@@ -192,7 +192,7 @@ export class AuthService {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: this.configService.get<string>(
         'JWT_REFRESH_EXPIRES_IN',
-        '7d',
+        '30d',
       ),
     });
 
@@ -205,7 +205,7 @@ export class AuthService {
   ): Promise<void> {
     const expiresIn = this.configService.get<string>(
       'JWT_REFRESH_EXPIRES_IN',
-      '7d',
+      '30d',
     );
     const expiresAt = new Date();
 

@@ -2,18 +2,48 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DictionaryResolver } from '../dictionary.resolver';
 import { DictionaryService } from '../../services/dictionary.service';
 import { PrismaService } from '../../services/prisma.service';
+import { RedisService } from '../../redis/redis.service';
+import { SearchService } from '../../services/search.service';
 
 describe('DictionaryResolver', () => {
   let resolver: DictionaryResolver;
   let service: DictionaryService;
 
+  // Mock для RedisService
+  const mockRedisService = {
+    getCachedSearchResults: jest.fn(),
+    cacheSearchResults: jest.fn(),
+    getCachedCharacter: jest.fn(),
+    cacheCharacter: jest.fn(),
+  };
+
+  // Mock для SearchService
+  const mockSearchService = {
+    searchWithStrategy: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DictionaryResolver, DictionaryService, PrismaService],
+      providers: [
+        DictionaryResolver,
+        DictionaryService,
+        PrismaService,
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
+        {
+          provide: SearchService,
+          useValue: mockSearchService,
+        },
+      ],
     }).compile();
 
     resolver = module.get<DictionaryResolver>(DictionaryResolver);
     service = module.get<DictionaryService>(DictionaryService);
+
+    // Очищаем моки перед каждым тестом
+    jest.clearAllMocks();
   });
 
   describe('searchCharacters', () => {

@@ -168,12 +168,38 @@ export class DslParser {
   }
 
   /**
-   * Extract pinyin from text (usually in parentheses or specific notation)
+   * Check if text is a pure pinyin line (no DSL tags, only Latin with tones)
+   */
+  private isPinyinLine(text: string): boolean {
+    // Remove leading/trailing whitespace
+    const trimmed = text.trim();
+    
+    // Empty string is not pinyin
+    if (!trimmed) return false;
+    
+    // Check if it contains only Latin letters, tones, spaces, and common pinyin characters
+    // Includes: basic Latin, tone marks, ü, combining diacritics, numbers for tones
+    const pinyinRegex = /^[a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜêńňǹ\s0-9\u0300-\u036f]+$/;
+    
+    // Must not contain Chinese characters or DSL tags
+    const hasChinese = /[\u4e00-\u9fff]/.test(trimmed);
+    const hasDslTags = /\[.*?\]/.test(trimmed);
+    
+    return pinyinRegex.test(trimmed) && !hasChinese && !hasDslTags;
+  }
+
+  /**
+   * Extract pinyin from text (supports multiple formats)
    */
   private extractPinyin(text: string): string | undefined {
+    // First check if the entire text is a pure pinyin line
+    if (this.isPinyinLine(text)) {
+      return text.trim();
+    }
+    
     // Try to find pinyin in format like (xuéxí) or [pinyin]...[/pinyin]
     // Match Latin letters with tone marks in parentheses
-    const pinyinMatch = text.match(/\(([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüêńňǹ\s]+)\)/) || 
+    const pinyinMatch = text.match(/\(([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüêńňǹ\s0-9\u0300-\u036f]+)\)/) || 
                         text.match(/\[pinyin\](.*?)\[\/pinyin\]/);
     
     if (pinyinMatch) {
@@ -218,9 +244,18 @@ export class DslParser {
   /**
    * Parse a single dictionary entry
    */
-  parseEntry(headword: string, content: string): DslEntry {
+  parseEntry(headword: string, content: string, pinyinLine?: string): DslEntry {
     const { simplified, traditional } = this.extractChinese(headword);
-    const pinyin = this.extractPinyin(headword) || this.extractPinyin(content);
+    
+    // Priority: pinyinLine → headword → content
+    let pinyin: string | undefined;
+    if (pinyinLine) {
+      pinyin = this.extractPinyin(pinyinLine);
+    }
+    if (!pinyin) {
+      pinyin = this.extractPinyin(headword) || this.extractPinyin(content);
+    }
+    
     const definitions = this.extractDefinitions(content);
     const examples = this.extractExamples(content);
 
@@ -259,8 +294,10 @@ export class DslParser {
     });
 
     let currentHeadword: string | null = null;
+    let currentPinyinLine: string | null = null;
     let currentContent: string[] = [];
     let inHeader = true;
+    let isFirstContentLine = true;
 
     for await (const line of rl) {
       // Parse metadata in header
@@ -276,11 +313,13 @@ export class DslParser {
 
       // Empty line indicates end of entry
       if (line.trim() === '' && currentHeadword) {
-        const entry = this.parseEntry(currentHeadword, currentContent.join('\n'));
+        const entry = this.parseEntry(currentHeadword, currentContent.join('\n'), currentPinyinLine || undefined);
         yield entry;
         
         currentHeadword = null;
+        currentPinyinLine = null;
         currentContent = [];
+        isFirstContentLine = true;
         continue;
       }
 
@@ -288,21 +327,30 @@ export class DslParser {
       if (!line.startsWith(' ') && !line.startsWith('\t') && line.trim() !== '') {
         // If we have a previous entry, yield it
         if (currentHeadword) {
-          const entry = this.parseEntry(currentHeadword, currentContent.join('\n'));
+          const entry = this.parseEntry(currentHeadword, currentContent.join('\n'), currentPinyinLine || undefined);
           yield entry;
           currentContent = [];
         }
         
         currentHeadword = line.trim();
+        currentPinyinLine = null;
+        isFirstContentLine = true;
       } else if (currentHeadword && line.trim() !== '') {
-        // Continuation of current entry content
-        currentContent.push(line.trim());
+        // Check if this is the first content line and it looks like pinyin
+        if (isFirstContentLine && this.isPinyinLine(line)) {
+          currentPinyinLine = line.trim();
+          isFirstContentLine = false;
+        } else {
+          // Regular content line
+          currentContent.push(line.trim());
+          isFirstContentLine = false;
+        }
       }
     }
 
     // Don't forget the last entry
     if (currentHeadword) {
-      const entry = this.parseEntry(currentHeadword, currentContent.join('\n'));
+      const entry = this.parseEntry(currentHeadword, currentContent.join('\n'), currentPinyinLine || undefined);
       yield entry;
     }
   }

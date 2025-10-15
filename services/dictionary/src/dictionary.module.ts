@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DictionaryService } from './services/dictionary.service';
 import { PrismaService } from './services/prisma.service';
+import { SearchService } from './services/search.service';
 import { DictionaryResolver } from './resolvers/dictionary.resolver';
 import { DictionaryController } from './controllers/dictionary.controller';
 import { RedisModule } from './redis/redis.module';
@@ -8,7 +9,12 @@ import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [RedisModule],
   controllers: [DictionaryController],
-  providers: [DictionaryService, PrismaService, DictionaryResolver],
+  providers: [
+    DictionaryService,
+    PrismaService,
+    SearchService,
+    DictionaryResolver,
+  ],
   exports: [DictionaryService],
 })
 export class DictionaryModule {}

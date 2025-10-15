@@ -51,6 +51,24 @@ describe('DslParser', () => {
       expect(entry.pinyin).toBe('xué');
     });
 
+    it('should extract pinyin from separate pinyin line (BKRS format)', () => {
+      const entry = parser.parseEntry('土康廷斯河', '[m1]река Тукантин[/m]', 'tǔkāngtīngsī hé');
+
+      expect(entry.pinyin).toBe('tǔkāngtīngsī hé');
+    });
+
+    it('should prioritize pinyin line over headword', () => {
+      const entry = parser.parseEntry('学 (xué)', '[m1]учиться[/m]', 'xuéxí');
+
+      expect(entry.pinyin).toBe('xuéxí');
+    });
+
+    it('should handle complex pinyin with tones', () => {
+      const entry = parser.parseEntry('上海', '[m1]Шанхай[/m]', 'shànghǎi');
+
+      expect(entry.pinyin).toBe('shànghǎi');
+    });
+
     it('should parse multiple definitions', () => {
       const content = '[m1]1. учиться, изучать[/m][m1]2. учеба, обучение[/m][m1]3. наука[/m]';
       const entry = parser.parseEntry('学', content);
@@ -242,6 +260,63 @@ describe('DslParser', () => {
       expect(entries).toHaveLength(3);
       expect(parser.getMetadata().name).toBe('База примеров 大БКРС (2025-10-13)');
       expect(entries[0].simplified).toContain('柏威夏古庙');
+    });
+
+    it('should parse BKRS format with pinyin on separate line', async () => {
+      const content = `#NAME "大БКРС (2025-10-13)"
+#INDEX_LANGUAGE "Chinese"
+#CONTENTS_LANGUAGE "Russian"
+
+土康廷斯河
+ tǔkāngtīngsī hé
+ [m1]река Тукантин ([i]в Бразилии[/i])[/m]
+
+山西
+ shānxī
+ [m1]1) Шаньси ([i]провинция в КНР[/i])[/m][m1]2) Шонтэй, Шонтай ([i]вьетнамский топоним[/i])[/m]
+`;
+
+      const filePath = createTestFile('test.dsl', content);
+      const entries: DslEntry[] = [];
+
+      for await (const entry of parser.parseFile(filePath)) {
+        entries.push(entry);
+      }
+
+      expect(entries).toHaveLength(2);
+      expect(entries[0].headword).toBe('土康廷斯河');
+      expect(entries[0].pinyin).toBe('tǔkāngtīngsī hé');
+      expect(entries[0].definitions).toHaveLength(1);
+      expect(entries[0].definitions[0].translation).toContain('река Тукантин');
+      
+      expect(entries[1].headword).toBe('山西');
+      expect(entries[1].pinyin).toBe('shānxī');
+      expect(entries[1].definitions).toHaveLength(2);
+    });
+
+    it('should handle mixed formats (with and without pinyin)', async () => {
+      const content = `学 (xué)
+ [m1]учиться[/m]
+
+好
+ hǎo
+ [m1]хороший[/m]
+
+没有
+ [m1]нет[/m]
+`;
+
+      const filePath = createTestFile('test.dsl', content);
+      const entries: DslEntry[] = [];
+
+      for await (const entry of parser.parseFile(filePath)) {
+        entries.push(entry);
+      }
+
+      expect(entries).toHaveLength(3);
+      expect(entries[0].pinyin).toBe('xué');
+      expect(entries[1].pinyin).toBe('hǎo');
+      expect(entries[2].pinyin).toBeUndefined();
     });
   });
 

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { SearchService } from './search.service';
 import { Character } from '../entities/character.entity';
 import { Phrase } from '../entities/phrase.entity';
 import { CharacterAnalysis } from '../entities/character-analysis.entity';
@@ -12,14 +13,18 @@ export class DictionaryService {
   constructor(
     private prisma: PrismaService,
     private redisService: RedisService,
+    private searchService: SearchService,
   ) {}
 
   /**
-   * Поиск иероглифов с использованием полнотекстового поиска pg_jieba
+   * Поиск иероглифов с использованием улучшенного алгоритма поиска
+   * Автоматически определяет тип ввода (китайский/пиньин/русский)
+   * и применяет соответствующую стратегию поиска
    */
   async searchCharacters(query: string, limit: number = 20): Promise<Character[]> {
     // Проверяем кеш
-    const cached = await this.redisService.getCachedSearchResults(`${query}:${limit}`);
+    const cacheKey = `search:${query}:${limit}`;
+    const cached = await this.redisService.getCachedSearchResults(cacheKey);
     if (cached) {
       this.logger.log(`Cache hit for search: ${query}`);
       // Ограничиваем примеры и определения даже для закешированных данных
@@ -32,15 +37,20 @@ export class DictionaryService {
     }
 
     this.logger.log(`Cache miss for search: ${query}, querying database`);
-    const results = await this.prisma.$queryRaw<Character[]>`
-      SELECT * FROM search_chinese_characters(${query}, ${limit}::int)
-    `;
     
-    // Для каждого иероглифа загружаем связанные данные
+    // Используем новый SearchService вместо прямого запроса
+    const searchResults = await this.searchService.searchWithStrategy(query, limit);
+    
+    if (searchResults.length === 0) {
+      this.logger.log(`No results found for query: ${query}`);
+      return [];
+    }
+    
+    // Загружаем полные данные для найденных иероглифов
     const characters = await Promise.all(
-      results.map(async (char) => {
+      searchResults.map(async (result) => {
         const character = await this.prisma.character.findUnique({
-          where: { id: char.id },
+          where: { id: result.id },
           include: {
             definitions: {
               orderBy: { order: 'asc' },
@@ -59,10 +69,13 @@ export class DictionaryService {
       }),
     );
 
+    // Фильтруем null значения (на случай если иероглиф был удален)
+    const validCharacters = characters.filter((char) => char !== null);
+
     // Кешируем результат на 5 минут (300 секунд)
-    await this.redisService.cacheSearchResults(`${query}:${limit}`, characters, 300);
+    await this.redisService.cacheSearchResults(cacheKey, validCharacters, 300);
     
-    return characters;
+    return validCharacters;
   }
 
   /**
