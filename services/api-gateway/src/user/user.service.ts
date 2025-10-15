@@ -16,12 +16,18 @@ export class UserService {
         }
       `;
 
-      await firstValueFrom(
-        this.httpService.post('graphql', {
+      const response = await firstValueFrom(
+        this.httpService.post('/graphql', {
           query: mutation,
           variables: { userId },
         }),
       );
+
+      this.logger.log(`Search count incremented for user ${userId}`);
+      
+      if (response.data?.errors) {
+        this.logger.error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+      }
     } catch (error) {
       this.logger.error(`Failed to increment search count: ${error.message}`);
       // Don't throw - statistics tracking should not break the main flow

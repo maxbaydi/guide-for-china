@@ -74,7 +74,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
 
   const handleAdd = () => {
     if (!selectedCollectionId) {
-      showError('Выберите коллекцию');
+      showError(t('collections.selectCollection'));
       return;
     }
     

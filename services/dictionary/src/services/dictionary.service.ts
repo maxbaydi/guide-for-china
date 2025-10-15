@@ -22,7 +22,13 @@ export class DictionaryService {
     const cached = await this.redisService.getCachedSearchResults(`${query}:${limit}`);
     if (cached) {
       this.logger.log(`Cache hit for search: ${query}`);
-      return cached;
+      // Ограничиваем примеры и определения даже для закешированных данных
+      const limitedResults = cached.map((char: any) => ({
+        ...char,
+        examples: char.examples?.slice(0, 20) || [],
+        definitions: char.definitions?.slice(0, 20) || [],
+      } as Character));
+      return limitedResults;
     }
 
     this.logger.log(`Cache miss for search: ${query}, querying database`);
@@ -38,8 +44,14 @@ export class DictionaryService {
           include: {
             definitions: {
               orderBy: { order: 'asc' },
+              take: 20, // Ограничиваем до 20 определений
             },
-            examples: true,
+            examples: {
+              take: 20, // Ограничиваем до 20 примеров
+              orderBy: {
+                createdAt: 'desc', // Сортируем для детерминированного порядка
+              },
+            },
           },
         });
         
@@ -61,6 +73,13 @@ export class DictionaryService {
     const cached = await this.redisService.getCachedCharacter(id);
     if (cached) {
       this.logger.log(`Cache hit for character: ${id}`);
+      // Ограничиваем примеры и определения даже для закешированных данных
+      if (cached.examples && cached.examples.length > 20) {
+        cached.examples = cached.examples.slice(0, 20);
+      }
+      if (cached.definitions && cached.definitions.length > 20) {
+        cached.definitions = cached.definitions.slice(0, 20);
+      }
       return cached;
     }
 
@@ -70,14 +89,23 @@ export class DictionaryService {
       include: {
         definitions: {
           orderBy: { order: 'asc' },
+          take: 20, // Ограничиваем до 20 определений
         },
-        examples: true,
+        examples: {
+          take: 20, // Ограничиваем до 20 примеров
+          orderBy: {
+            createdAt: 'desc', // Сортируем для детерминированного порядка
+          },
+        },
       },
     });
     
     if (character) {
+      this.logger.log(`Character found: ${character.simplified} (${character.id})`);
       // Кешируем результат на 1 час (3600 секунд)
       await this.redisService.cacheCharacter(id, character, 3600);
+    } else {
+      this.logger.warn(`Character not found with id: ${id}`);
     }
     
     return character as Character;
@@ -92,8 +120,14 @@ export class DictionaryService {
       include: {
         definitions: {
           orderBy: { order: 'asc' },
+          take: 20, // Ограничиваем до 20 определений
         },
-        examples: true,
+        examples: {
+          take: 20, // Ограничиваем до 20 примеров
+          orderBy: {
+            createdAt: 'desc', // Сортируем для детерминированного порядка
+          },
+        },
       },
     });
     
@@ -131,6 +165,7 @@ export class DictionaryService {
 
   /**
    * Анализ текста - разбивает текст на иероглифы и возвращает информацию о каждом
+   * Оптимизирован для избежания N+1 запросов к базе данных
    */
   async analyzeText(text: string): Promise<CharacterAnalysis[]> {
     // Проверяем кеш
@@ -142,14 +177,48 @@ export class DictionaryService {
 
     this.logger.log(`Cache miss for text analysis, processing: ${text.substring(0, 20)}...`);
     const characters = text.split('');
-    const analysis: CharacterAnalysis[] = [];
+    
+    // Шаг 1: Собрать все уникальные китайские иероглифы из текста
+    const uniqueChineseChars = new Set<string>();
+    for (const char of characters) {
+      if (this.isChineseCharacter(char)) {
+        uniqueChineseChars.add(char);
+      }
+    }
 
+    // Шаг 2: Выполнить один массовый запрос для всех уникальных иероглифов
+    // Не загружаем examples для оптимизации производительности - они не нужны в UI анализа
+    const uniqueCharsArray = Array.from(uniqueChineseChars);
+    this.logger.log(`Fetching ${uniqueCharsArray.length} unique characters from database`);
+    
+    const characterRecords = await this.prisma.character.findMany({
+      where: {
+        simplified: {
+          in: uniqueCharsArray,
+        },
+      },
+      include: {
+        definitions: {
+          orderBy: { order: 'asc' },
+          take: 20, // Ограничиваем до 20 определений
+        },
+      },
+    });
+
+    // Шаг 3: Создать Map для быстрого доступа O(1)
+    const characterMap = new Map<string, Character>();
+    for (const char of characterRecords) {
+      // Добавляем пустой массив examples, так как мы их не загружали для оптимизации
+      characterMap.set(char.simplified, { ...char, examples: [] } as Character);
+    }
+
+    // Шаг 4: Построить результат используя Map
+    const analysis: CharacterAnalysis[] = [];
     for (let i = 0; i < characters.length; i++) {
       const char = characters[i];
       
-      // Проверяем, является ли это китайским иероглифом
       if (this.isChineseCharacter(char)) {
-        const details = await this.getCharacterBySimplified(char);
+        const details = characterMap.get(char);
         
         analysis.push({
           character: char,
@@ -240,8 +309,14 @@ export class DictionaryService {
         include: {
           definitions: {
             orderBy: { order: 'asc' },
+            take: 20, // Ограничиваем до 20 определений
           },
-          examples: true,
+          examples: {
+            take: 20, // Ограничиваем до 20 примеров
+            orderBy: {
+              createdAt: 'desc', // Сортируем для детерминированного порядка
+            },
+          },
         },
       });
       return fallback as Character;
@@ -253,8 +328,14 @@ export class DictionaryService {
       include: {
         definitions: {
           orderBy: { order: 'asc' },
+          take: 20, // Ограничиваем до 20 определений
         },
-        examples: true,
+        examples: {
+          take: 20, // Ограничиваем до 20 примеров
+          orderBy: {
+            createdAt: 'desc', // Сортируем для детерминированного порядка
+          },
+        },
       },
     });
     

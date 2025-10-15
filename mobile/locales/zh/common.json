@@ -26,9 +26,16 @@
     "history": "搜索历史",
     "noResults": "未找到结果",
     "resultsFound": "找到 {{count}} 个结果",
+    "resultsFor": "找到 {{count}} 个结果：\"{{query}}\"",
+    "resultsTitle": "搜索结果",
     "loading": "加载中...",
     "wordOfTheDay": "每日一词",
-    "exampleCard": "示例卡片"
+    "emptyTitle": "开始搜索",
+    "emptyDescription": "输入汉字、拼音或俄语翻译",
+    "tryDifferentQuery": "尝试更改查询",
+    "greeting": "您好",
+    "searchButton": "搜索",
+    "wordOfTheDayUnavailable": "每日一词暂时不可用"
   },
   "character": {
     "details": "汉字详情",
@@ -41,7 +48,9 @@
     "frequency": "频率",
     "definitions": "释义",
     "examples": "例句",
-    "addToCollection": "添加到词集"
+    "addToCollection": "添加到词集",
+    "noExamples": "暂无例句",
+    "noTranslation": "无翻译"
   },
   "analyze": {
     "title": "文本分析",
@@ -51,7 +60,8 @@
     "pasteButton": "粘贴",
     "clearButton": "清除",
     "results": "分析结果",
-    "example": "例句："
+    "charactersFound": "找到 {{count}} 个汉字",
+    "characterCount": "{{count}} / {{max}} 个字符"
   },
   "collections": {
     "title": "我的词集",
@@ -66,7 +76,8 @@
     "emptyCollection": "词集为空",
     "addedTo": "已添加到\"{{name}}\"",
     "removedFrom": "已从\"{{name}}\"删除",
-    "createButton": "创建"
+    "createButton": "创建",
+    "selectCollection": "选择词集"
   },
   "profile": {
     "title": "个人资料",
@@ -97,7 +108,16 @@
     "passwordsDontMatch": "密码不匹配",
     "invalidCredentials": "电子邮件或密码无效",
     "accountDeactivated": "账号已停用",
-    "userAlreadyExists": "该邮箱已被注册"
+    "userAlreadyExists": "该邮箱已被注册",
+    "passwordRequirements": "至少8个字符，包含大小写字母、数字和特殊符号",
+    "settingsSaveFailed": "无法保存设置",
+    "languageChangeFailed": "无法更改语言",
+    "usernameTooShort": "用户名至少需要3个字符",
+    "usernameTooLong": "用户名不能超过50个字符",
+    "usernameInvalidChars": "用户名只能包含字母、数字和下划线",
+    "noChanges": "没有需要保存的更改",
+    "sessionExpired": "会话已过期。请重新登录",
+    "textTooLong": "文本太长。最多 {{max}} 个字符"
   },
   "common": {
     "save": "保存",
@@ -109,7 +129,29 @@
     "submit": "提交",
     "confirm": "确认",
     "close": "关闭",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "soon": "即将推出",
+    "comingSoon": "即将推出",
+    "create": "创建"
+  },
+  "settings": {
+    "profile": "个人资料",
+    "security": "安全",
+    "preferences": "偏好设置",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "changePassword": "更改密码",
+    "profileUpdated": "资料已更新",
+    "passwordChanged": "密码已成功更改",
+    "darkTheme": "深色主题",
+    "wordOfTheDay": "每日一词",
+    "language": "语言",
+    "languageDescription": "选择界面语言",
+    "russian": "Русский",
+    "chinese": "中文",
+    "usernameHelperText": "仅限字母、数字和下划线（3-50个字符）",
+    "wordOfTheDayDescription": "在主屏幕上显示每日一词"
   }
 }
 

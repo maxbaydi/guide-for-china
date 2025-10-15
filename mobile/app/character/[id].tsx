@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { Text, IconButton, Card, ActivityIndicator, Button } from 'react-native-paper';
+import { Text, IconButton, Card, ActivityIndicator, Button, Divider } from 'react-native-paper';
 import { api } from '../../services/api';
 import { Character } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
@@ -130,17 +130,21 @@ export default function CharacterDetailScreen() {
             {activeTab === 'definitions' && (
                <View style={styles.definitionsList}>
                 {character.definitions.map((def, idx) => (
-                  <View key={`def-${idx}`} style={styles.definitionItemContainer}>
-                    <Text style={styles.definitionItem}>
-                      <Text style={styles.definitionNumber}>{idx + 1}. </Text>
-                      {def.partOfSpeech && (
-                        <Text style={styles.partOfSpeech}>({def.partOfSpeech}) </Text>
-                      )}
-                      <Text>{def.translation}</Text>
-                      {def.context && (
-                        <Text style={styles.definitionContext}> — {def.context}</Text>
-                      )}
-                    </Text>
+                  <View key={`def-${idx}`}>
+                    <View style={styles.definitionItemContainer}>
+                      <Text style={styles.definitionItem}>
+                        {def.partOfSpeech && (
+                          <Text style={styles.partOfSpeech}>({def.partOfSpeech}) </Text>
+                        )}
+                        <Text>{def.translation}</Text>
+                        {def.context && (
+                          <Text style={styles.definitionContext}> — {def.context}</Text>
+                        )}
+                      </Text>
+                    </View>
+                    {idx < character.definitions.length - 1 && (
+                      <Divider style={styles.divider} />
+                    )}
                   </View>
                 ))}
               </View>
@@ -148,11 +152,16 @@ export default function CharacterDetailScreen() {
             {activeTab === 'examples' && (
               <View style={styles.examplesList}>
                 {character.examples && character.examples.length > 0 ? (
-                    character.examples.map((ex) => (
-                        <View key={ex.id} style={styles.exampleItem}>
-                            <Text style={styles.exampleChinese}>{ex.chinese}</Text>
-                            {ex.pinyin && <Text style={styles.examplePinyin}>{ex.pinyin}</Text>}
-                            <Text style={styles.exampleTranslation}>{ex.russian}</Text>
+                    character.examples.map((ex, idx) => (
+                        <View key={`${ex.id}-${idx}`}>
+                          <View style={styles.exampleItem}>
+                              <Text style={styles.exampleChinese}>{ex.chinese}</Text>
+                              {ex.pinyin && <Text style={styles.examplePinyin}>{ex.pinyin}</Text>}
+                              <Text style={styles.exampleTranslation}>{ex.russian}</Text>
+                          </View>
+                          {idx < character.examples.length - 1 && (
+                            <Divider style={styles.divider} />
+                          )}
                         </View>
                     ))
                 ) : (
@@ -264,19 +273,14 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   definitionsList: {
-    gap: 12,
+    gap: 0,
   },
   definitionItemContainer: {
-    flexDirection: 'row',
+    paddingVertical: 12,
   },
   definitionItem: {
     fontSize: 16,
     lineHeight: 24,
-    flex: 1,
-  },
-  definitionNumber: {
-    fontWeight: '600',
-    color: Colors.text,
   },
   partOfSpeech: {
     fontStyle: 'italic',
@@ -287,15 +291,20 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     fontStyle: 'italic',
   },
+  divider: {
+    backgroundColor: Colors.border,
+  },
   examplesList: {
-    gap: 16,
+    gap: 0,
   },
   exampleItem: {
-    gap: 4
+    paddingVertical: 12,
+    gap: 8,
   },
   exampleChinese: {
     fontFamily: 'Noto Serif SC',
     fontSize: 18,
+    color: Colors.text,
   },
   examplePinyin: {
     color: Colors.textLight,
@@ -303,6 +312,8 @@ const styles = StyleSheet.create({
   },
   exampleTranslation: {
     fontSize: 16,
+    color: Colors.text,
+    marginTop: 4,
   },
   noExamplesText: {
     color: Colors.textLight,

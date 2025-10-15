@@ -11,6 +11,8 @@ import { Colors } from '../../constants/Colors';
 import { showError } from '../../utils/toast';
 import { getErrorMessage } from '../../utils/errorHandler';
 
+const MAX_TEXT_LENGTH = 300;
+
 export default function AnalyzeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -40,8 +42,24 @@ export default function AnalyzeScreen() {
   });
 
   const handleAnalyze = () => {
-    if (text.trim()) {
-      analyzeMutation.mutate(text.trim());
+    const trimmedText = text.trim();
+    
+    if (!trimmedText) {
+      return;
+    }
+    
+    if (trimmedText.length > MAX_TEXT_LENGTH) {
+      showError(t('errors.textTooLong', { max: MAX_TEXT_LENGTH }));
+      return;
+    }
+    
+    analyzeMutation.mutate(trimmedText);
+  };
+
+  const handleTextChange = (newText: string) => {
+    // Разрешаем ввод, но не даем превысить лимит
+    if (newText.length <= MAX_TEXT_LENGTH) {
+      setText(newText);
     }
   };
 
@@ -75,11 +93,22 @@ export default function AnalyzeScreen() {
 
         <TextInput
           value={text}
-          onChangeText={setText}
+          onChangeText={handleTextChange}
           placeholder={t('analyze.placeholder') || '我爱学中文...'}
           multiline
           style={styles.textInput}
+          maxLength={MAX_TEXT_LENGTH}
         />
+
+        <Text 
+          variant="bodySmall" 
+          style={[
+            styles.characterCount,
+            text.length >= MAX_TEXT_LENGTH && styles.characterCountLimit
+          ]}
+        >
+          {t('analyze.characterCount', { count: text.length, max: MAX_TEXT_LENGTH })}
+        </Text>
 
         <View style={styles.buttonRow}>
           <Button 
@@ -105,7 +134,7 @@ export default function AnalyzeScreen() {
           mode="contained"
           onPress={handleAnalyze}
           loading={analyzeMutation.isPending}
-          disabled={!text.trim() || analyzeMutation.isPending}
+          disabled={!text.trim() || analyzeMutation.isPending || text.length > MAX_TEXT_LENGTH}
           style={styles.analyzeButton}
           labelStyle={styles.analyzeButtonLabel}
         >
@@ -144,6 +173,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     textAlignVertical: 'top',
+  },
+  characterCount: {
+    color: Colors.textLight,
+    textAlign: 'right',
+    marginTop: -16,
+  },
+  characterCountLimit: {
+    color: Colors.primary,
+    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',

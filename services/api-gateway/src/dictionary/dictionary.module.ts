@@ -17,7 +17,7 @@ import { UserModule } from '../user/user.module';
         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         return {
           baseURL: cleanBaseUrl,
-          timeout: 30000,
+          timeout: 60000, // Увеличен до 60 секунд для сложных запросов
           maxRedirects: 5,
           headers: {
             'Content-Type': 'application/json',

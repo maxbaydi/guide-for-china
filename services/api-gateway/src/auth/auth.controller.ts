@@ -101,7 +101,8 @@ export class AuthController {
     }
 
     try {
-      return await this.authService.getMe(token);
+      const user = await this.authService.getMe(token);
+      return { user }; // Обернуть результат для соответствия ожиданиям фронтенда
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }

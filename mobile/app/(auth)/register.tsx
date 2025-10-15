@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
@@ -8,6 +8,7 @@ import { Colors } from '../../constants/Colors';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { saveLanguage } from '../../services/i18n';
 
 const schema = z.object({
   email: z.string().email('errors.invalidEmail'),
@@ -22,13 +23,18 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function RegisterScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { register } = useAuth();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleLanguageChange = async (lang: string) => {
+    await i18n.changeLanguage(lang);
+    await saveLanguage(lang);
+  };
   
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -54,6 +60,21 @@ export default function RegisterScreen() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.languageButtons}>
+            <TouchableOpacity 
+              style={[styles.langButton, i18n.language === 'ru' && styles.langButtonActive]}
+              onPress={() => handleLanguageChange('ru')}
+            >
+              <Text style={[styles.langButtonText, i18n.language === 'ru' && styles.langButtonTextActive]}>RU</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.langButton, i18n.language === 'zh' && styles.langButtonActive]}
+              onPress={() => handleLanguageChange('zh')}
+            >
+              <Text style={[styles.langButtonText, i18n.language === 'zh' && styles.langButtonTextActive]}>中</Text>
+            </TouchableOpacity>
+          </View>
+          
           <View style={styles.header}>
             <Text variant="headlineLarge" style={styles.title}>
               {t('auth.registerTitle')}
@@ -139,5 +160,31 @@ const styles = StyleSheet.create({
   link: {
     color: Colors.primary,
     fontWeight: 'bold',
+  },
+  languageButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginBottom: 16,
+  },
+  langButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
+  },
+  langButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  langButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  langButtonTextActive: {
+    color: Colors.white,
   },
 });

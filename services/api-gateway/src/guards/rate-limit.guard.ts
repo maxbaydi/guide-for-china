@@ -34,6 +34,9 @@ export class RateLimitGuard implements CanActivate {
       const userId = payload.sub;
       const tier = payload.subscriptionTier || 'FREE';
 
+      // Добавляем информацию о пользователе в request для использования в контроллерах
+      request.user = { sub: userId, subscriptionTier: tier };
+
       // Лимиты в зависимости от тарифа
       const limits = {
         FREE: { requests: 50, window: 86400 }, // 50 запросов в день

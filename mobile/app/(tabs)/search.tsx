@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
+import { ScrollView, View, StyleSheet, AppState } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text, Avatar, Card, Paragraph, Button, ActivityIndicator } from 'react-native-paper';
@@ -21,41 +21,42 @@ export default function SearchScreen() {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isWordOfDayEnabled, setIsWordOfDayEnabled] = useState(true);
 
-  const { data: wordOfTheDay, isLoading: isLoadingWord, refetch: refetchWord } = useQuery<Character>({
+  const { data: wordOfTheDay, isLoading: isLoadingWord, error: wordError, refetch: refetchWord } = useQuery<Character>({
     queryKey: ['wordOfTheDay'],
     queryFn: async () => {
       try {
         const { data } = await api.get('/dictionary/word-of-the-day', {
           skipErrorToast: true,
         } as any);
+        console.log('Word of the day loaded:', data);
         return data;
       } catch (error: any) {
-        if (error.response?.status === 404) {
-          return null; // Нормальная ситуация - слово дня не настроено
+        console.error('Word of the day error:', error);
+        if (error.response?.status === 404 || error.response?.status === 500) {
+          return null; // Нормальная ситуация - слово дня не настроено или ошибка
         }
-        throw error;
+        return null;
       }
     },
     staleTime: 1000 * 60 * 60 * 24, // Кеш на 24 часа
+    retry: 1, // Попробовать 1 раз перезапросить при ошибке
     enabled: isWordOfDayEnabled, // Загружать только если настройка включена
   });
 
-  useEffect(() => {
-    loadSearchHistory();
-    loadWordOfDaySetting();
-  }, []);
-
-  useEffect(() => {
-    if (isWordOfDayEnabled) {
-      refetchWord();
-    }
-  }, [isWordOfDayEnabled]);
+  // Перезагрузка настроек при возврате на экран
+  useFocusEffect(
+    useCallback(() => {
+      loadWordOfDaySetting();
+      loadSearchHistory();
+    }, [])
+  );
 
   const loadWordOfDaySetting = async () => {
     try {
       const value = await AsyncStorage.getItem('wordOfDayEnabled');
       if (value !== null) {
-        setIsWordOfDayEnabled(JSON.parse(value));
+        const enabled = JSON.parse(value);
+        setIsWordOfDayEnabled(enabled);
       }
     } catch (error) {
       console.error('Failed to load word of day setting:', error);
@@ -75,6 +76,10 @@ export default function SearchScreen() {
   
   const handleHistoryClick = (term: string) => {
     setQuery(term);
+    // Сразу запускаем поиск
+    if (term.trim()) {
+      router.push(`/search-results?query=${encodeURIComponent(term.trim())}`);
+    }
   };
 
   const navigateToCharacter = (id: string) => {
@@ -138,26 +143,42 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {isWordOfDayEnabled && (isLoadingWord || wordOfTheDay) && (
+      {isWordOfDayEnabled && (
         <View style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>{t('search.wordOfTheDay')}</Text>
-          <Card style={styles.wordOfTheDayCard} onPress={() => wordOfTheDay && navigateToCharacter(wordOfTheDay.id)}>
-            {isLoadingWord ? (
+          {isLoadingWord ? (
+            <Card style={styles.wordOfTheDayCard}>
               <Card.Content style={styles.wordOfTheDayContent}>
                 <ActivityIndicator size="large" color={Colors.primary} />
               </Card.Content>
-            ) : wordOfTheDay ? (
+            </Card>
+          ) : wordOfTheDay ? (
+            <Card style={styles.wordOfTheDayCard} onPress={() => navigateToCharacter(wordOfTheDay.id)}>
               <Card.Content style={styles.wordOfTheDayContent}>
                 <Text style={styles.wordOfTheDayChar}>{wordOfTheDay.simplified}</Text>
-                <View style={{ flex: 1 }}>
-                  <Paragraph style={styles.wordOfTheDayPinyin}>{wordOfTheDay.pinyin}</Paragraph>
-                  <Paragraph style={styles.wordOfTheDayTranslation}>
-                    {wordOfTheDay.definitions?.[0]?.translation}
-                  </Paragraph>
+                <View style={styles.wordOfTheDayInfo}>
+                  <Text style={styles.wordOfTheDayTranslation}>
+                    {wordOfTheDay.definitions && wordOfTheDay.definitions.length > 0
+                      ? wordOfTheDay.definitions[0].translation
+                      : t('character.noTranslation')}
+                  </Text>
+                  {wordOfTheDay.examples && wordOfTheDay.examples.length > 0 && (
+                    <Text style={styles.wordOfTheDayExample} numberOfLines={2}>
+                      {wordOfTheDay.examples[0].chinese}
+                    </Text>
+                  )}
                 </View>
               </Card.Content>
-            ) : null}
-          </Card>
+            </Card>
+          ) : wordError ? (
+            <Card style={styles.wordOfTheDayCard}>
+              <Card.Content>
+                <Text style={{ color: Colors.textLight, textAlign: 'center' }}>
+                  {t('search.wordOfTheDayUnavailable')}
+                </Text>
+              </Card.Content>
+            </Card>
+          ) : null}
         </View>
       )}
 
@@ -213,12 +234,19 @@ const styles = StyleSheet.create({
     fontSize: 52,
     color: Colors.primary,
   },
-  wordOfTheDayPinyin: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  wordOfTheDayInfo: {
+    flex: 1,
+    gap: 4,
   },
   wordOfTheDayTranslation: {
-    color: Colors.textLight,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000', // Черный цвет для контраста с розовым фоном
+  },
+  wordOfTheDayExample: {
+    fontSize: 14,
+    color: '#4A5568', // Темно-серый цвет для лучшей читаемости
+    fontStyle: 'italic',
   },
   searchButton: {
     backgroundColor: Colors.primary,
