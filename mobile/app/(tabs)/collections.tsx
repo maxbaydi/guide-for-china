@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { FlatList, View, StyleSheet } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -31,12 +31,16 @@ export default function CollectionsScreen() {
     context: {
       skipErrorToast: true, // Обрабатываем ошибки вручную
     },
-    onError: (err) => {
-      console.error('Error loading collections:', err);
-      const errorMessage = getErrorMessage(err);
-      showError(errorMessage);
-    },
   });
+  
+  // Обработка ошибок через useEffect вместо onError (deprecated)
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading collections:', error);
+      const errorMessage = getErrorMessage(error);
+      showError(errorMessage);
+    }
+  }, [error]);
   
   // Перезагружаем коллекции при возврате на экран
   useFocusEffect(

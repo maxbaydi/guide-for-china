@@ -46,7 +46,7 @@ export default function SearchResultsScreen() {
       
       <FlatList
         data={searchResults || []}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl

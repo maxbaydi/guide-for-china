@@ -19,21 +19,21 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
     <Card onPress={onPress}>
       <View style={styles.container}>
         <View style={styles.characterContent}>
-            <Text style={styles.character}>{character.simplified}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.pinyin} variant="titleMedium">
-                {character.pinyin}
+          <Text style={styles.character}>{character.simplified}</Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.pinyin} variant="bodyMedium">
+              {character.pinyin}
+            </Text>
+            {character.definitions && character.definitions.length > 0 && (
+              <Text
+                style={styles.translation}
+                variant="bodyMedium"
+                numberOfLines={1}
+              >
+                {character.definitions[0]?.translation || ''}
               </Text>
-              {character.definitions && character.definitions.length > 0 && (
-                <Text
-                  style={styles.translation}
-                  variant="bodyMedium"
-                  numberOfLines={2}
-                >
-                  {character.definitions[0]?.translation || ''}
-                </Text>
-              )}
-            </View>
+            )}
+          </View>
         </View>
 
         <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.textLight} />
@@ -50,24 +50,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   characterContent: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 16,
+    gap: 8,
     flex: 1,
   },
   character: {
-    fontSize: 36,
+    fontSize: 48,
     fontFamily: 'Noto Serif SC',
-    flexShrink: 0,
+    color: Colors.text,
+  },
+  textContainer: {
+    alignItems: 'center',
+    gap: 4,
+    width: '100%',
   },
   pinyin: {
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: Colors.text,
-    flexWrap: 'wrap',
+    textAlign: 'center',
   },
   translation: {
     color: Colors.textLight,
-    flexWrap: 'wrap',
-    flex: 1,
+    textAlign: 'center',
   },
 });

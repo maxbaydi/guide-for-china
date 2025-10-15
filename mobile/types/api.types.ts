@@ -69,6 +69,9 @@ export interface User {
   username?: string;
   displayName?: string;
   avatarUrl?: string;
+  subscriptionTier?: string;
+  dailyRequestsUsed: number;
+  dailyRequestsLimit: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,7 +91,6 @@ export interface RegisterInput {
   email: string;
   password: string;
   username?: string;
-  displayName?: string;
 }
 
 // Collection types

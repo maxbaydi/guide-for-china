@@ -5,7 +5,7 @@ import { useQuery, gql } from '@apollo/client';
 import { Text, Avatar, ProgressBar, Card, Button } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/Colors';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useEffect } from 'react';
 
 const GET_MY_STATS = gql`
   query GetMyStats {
@@ -19,13 +19,40 @@ const GET_MY_STATS = gql`
   }
 `;
 
+const GET_ME = gql`
+  query GetMe {
+    me {
+      id
+      email
+      username
+      dailyRequestsUsed
+      dailyRequestsLimit
+      subscriptionTier
+    }
+  }
+`;
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, rateLimitsInfo } = useAuth();
 
-  const { data } = useQuery(GET_MY_STATS, { fetchPolicy: 'cache-and-network' });
+  const { data, refetch } = useQuery(GET_MY_STATS, { fetchPolicy: 'cache-and-network' });
   const stats = data?.myStatistics;
+
+  const { data: meData, refetch: refetchMe } = useQuery(GET_ME, { fetchPolicy: 'cache-and-network' });
+  const userLimits = meData?.me;
+  
+  // Используем данные из rateLimitsInfo (которые приходят из заголовков X-RateLimit-*)
+  const requestsRemaining = rateLimitsInfo.remaining;
+  const requestsLimit = rateLimitsInfo.limit;
+  const requestsProgress = requestsLimit > 0 ? (requestsLimit - requestsRemaining) / requestsLimit : 0;
+  
+  // Обновляем данные при фокусе на экране
+  useEffect(() => {
+    refetch();
+    refetchMe();
+  }, [rateLimitsInfo]);
 
   const handleLogout = () => {
     logout();
@@ -46,15 +73,17 @@ export default function ProfileScreen() {
 
       <Card style={styles.card}>
         <Card.Content>
-          <View style={styles.subscriptionHeader}>
-            <Text style={styles.subscriptionTitle}>{t('profile.subscriptionStatus')}: </Text>
-            <Text style={[styles.subscriptionTitle, { color: Colors.secondary }]}>FREE</Text>
-          </View>
-          <Text style={styles.requestsText}>{t('profile.requestsRemaining', { remaining: 34, total: 50 })}</Text>
-          <ProgressBar progress={0.68} color={Colors.secondary} style={styles.progressBar} />
-          <Button mode="contained" onPress={() => {}} style={styles.upgradeButton}>
-            ✨ {t('profile.upgradeButton')}
-          </Button>
+          <Text style={styles.requestsText}>
+            {t('profile.requestsRemainingDaily', { remaining: requestsRemaining, total: requestsLimit })}
+          </Text>
+          <ProgressBar 
+            progress={requestsProgress} 
+            color={requestsProgress > 0.8 ? Colors.error : Colors.primary} 
+            style={styles.progressBar} 
+          />
+          <Text style={styles.dailyLimitInfo}>
+            {t('profile.dailyLimitInfo')}
+          </Text>
         </Card.Content>
       </Card>
 
@@ -81,7 +110,7 @@ export default function ProfileScreen() {
             mode="contained" 
             onPress={() => router.push('/settings')} 
             style={styles.actionButton}
-            contentStyle={styles.actionButtonContent}
+            contentStyle={{ height: 48 }}
             labelStyle={styles.actionButtonLabel}
             icon="cog-outline"
         >
@@ -92,6 +121,8 @@ export default function ProfileScreen() {
             onPress={handleLogout}
             textColor={Colors.primary}
             style={styles.logoutButton}
+            contentStyle={{ height: 48 }}
+            labelStyle={styles.buttonLabel}
         >
           {t('auth.logout')}
         </Button>
@@ -127,26 +158,23 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
   },
-  subscriptionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  subscriptionTitle: {
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   requestsText: {
     textAlign: 'center',
-    color: Colors.textLight,
-    marginVertical: 8,
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
   },
   progressBar: {
     height: 8,
     borderRadius: 4,
+    width: '100%',
   },
-  upgradeButton: {
-    marginTop: 16,
-    backgroundColor: Colors.primary,
+  dailyLimitInfo: {
+    textAlign: 'center',
+    color: Colors.textLight,
+    fontSize: 12,
+    marginTop: 8,
   },
   statsRow: {
     flexDirection: 'row',
@@ -168,18 +196,16 @@ const styles = StyleSheet.create({
   actionButton: {
       backgroundColor: Colors.white,
   },
-  actionButtonContent: {
-      justifyContent: 'space-between',
-      flexDirection: 'row-reverse',
-      paddingVertical: 8,
-  },
   actionButtonLabel: {
       color: Colors.text,
       fontWeight: '600',
       fontSize: 16,
   },
+  buttonLabel: {
+      fontWeight: '600',
+      fontSize: 16,
+  },
   logoutButton: {
       borderColor: Colors.border,
-      paddingVertical: 8,
   }
 });

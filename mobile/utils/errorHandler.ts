@@ -17,6 +17,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   'Token expired': 'Токен истек',
   'Unauthorized': 'Требуется авторизация',
   'Account deactivated': 'Аккаунт деактивирован',
+  'property confirmPassword should not exist': 'Ошибка валидации формы',
+  'confirmPassword should not exist': 'Ошибка валидации формы',
   
   // Profile errors
   'Bad Request Exception': 'Неверный запрос',
@@ -75,7 +77,28 @@ export const formatApiError = (error: AxiosError | any): string => {
   }
   
   const status = error.response.status;
-  const message = error.response.data?.message || error.message || '';
+  const responseData = error.response.data;
+  
+  // Попытка извлечь сообщение из разных структур ответа
+  let message = '';
+  
+  // Обработка GraphQL ошибок в REST ответе
+  if (responseData?.errors && Array.isArray(responseData.errors)) {
+    message = responseData.errors[0]?.message || '';
+  }
+  // Обработка обычных REST ошибок
+  else if (responseData?.message) {
+    // Если message это массив (ValidationError)
+    if (Array.isArray(responseData.message)) {
+      message = responseData.message[0];
+    } else {
+      message = responseData.message;
+    }
+  }
+  // Fallback на error.message
+  else {
+    message = error.message || '';
+  }
   
   // Проверяем известные сообщения об ошибках
   for (const [key, value] of Object.entries(ERROR_MESSAGES)) {
@@ -89,13 +112,15 @@ export const formatApiError = (error: AxiosError | any): string => {
     case 400:
       return message || 'Неверный запрос';
     case 401:
-      return 'Требуется авторизация';
+      return message || ERROR_MESSAGES['Invalid credentials'];
     case 403:
       return 'Доступ запрещен';
     case 404:
       return 'Не найдено';
     case 409:
       return message || 'Конфликт данных';
+    case 422:
+      return message || 'Ошибка валидации данных';
     case 429:
       return 'Слишком много запросов. Попробуйте позже';
     case 500:
@@ -139,5 +164,6 @@ export const getErrorMessage = (error: any): string => {
   
   return 'Произошла неизвестная ошибка';
 };
+
 
 

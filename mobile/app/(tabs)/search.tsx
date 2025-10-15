@@ -19,19 +19,48 @@ export default function SearchScreen() {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [isWordOfDayEnabled, setIsWordOfDayEnabled] = useState(true);
 
-  const { data: wordOfTheDay, isLoading: isLoadingWord } = useQuery<Character>({
+  const { data: wordOfTheDay, isLoading: isLoadingWord, refetch: refetchWord } = useQuery<Character>({
     queryKey: ['wordOfTheDay'],
     queryFn: async () => {
-      const { data } = await api.get('/dictionary/word-of-the-day');
-      return data;
+      try {
+        const { data } = await api.get('/dictionary/word-of-the-day', {
+          skipErrorToast: true,
+        } as any);
+        return data;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          return null; // Нормальная ситуация - слово дня не настроено
+        }
+        throw error;
+      }
     },
     staleTime: 1000 * 60 * 60 * 24, // Кеш на 24 часа
+    enabled: isWordOfDayEnabled, // Загружать только если настройка включена
   });
 
   useEffect(() => {
     loadSearchHistory();
+    loadWordOfDaySetting();
   }, []);
+
+  useEffect(() => {
+    if (isWordOfDayEnabled) {
+      refetchWord();
+    }
+  }, [isWordOfDayEnabled]);
+
+  const loadWordOfDaySetting = async () => {
+    try {
+      const value = await AsyncStorage.getItem('wordOfDayEnabled');
+      if (value !== null) {
+        setIsWordOfDayEnabled(JSON.parse(value));
+      }
+    } catch (error) {
+      console.error('Failed to load word of day setting:', error);
+    }
+  };
 
   const loadSearchHistory = async () => {
     try {
@@ -86,6 +115,7 @@ export default function SearchScreen() {
         onPress={handleSearch}
         disabled={!query.trim()}
         style={styles.searchButton}
+        contentStyle={{ height: 48 }}
         labelStyle={styles.searchButtonLabel}
         icon="magnify"
       >
@@ -108,15 +138,15 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {wordOfTheDay && (
+      {isWordOfDayEnabled && (isLoadingWord || wordOfTheDay) && (
         <View style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>{t('search.wordOfTheDay')}</Text>
-          <Card style={styles.wordOfTheDayCard} onPress={() => navigateToCharacter(wordOfTheDay.id)}>
+          <Card style={styles.wordOfTheDayCard} onPress={() => wordOfTheDay && navigateToCharacter(wordOfTheDay.id)}>
             {isLoadingWord ? (
               <Card.Content style={styles.wordOfTheDayContent}>
                 <ActivityIndicator size="large" color={Colors.primary} />
               </Card.Content>
-            ) : (
+            ) : wordOfTheDay ? (
               <Card.Content style={styles.wordOfTheDayContent}>
                 <Text style={styles.wordOfTheDayChar}>{wordOfTheDay.simplified}</Text>
                 <View style={{ flex: 1 }}>
@@ -126,7 +156,7 @@ export default function SearchScreen() {
                   </Paragraph>
                 </View>
               </Card.Content>
-            )}
+            ) : null}
           </Card>
         </View>
       )}
@@ -192,7 +222,6 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 8,
   },
   searchButtonLabel: {
     fontSize: 16,

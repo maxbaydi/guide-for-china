@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { FlatList, View, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
@@ -10,7 +11,6 @@ import { CharacterCard } from '../../components/ui/CharacterCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { showError } from '../../utils/toast';
 import { getErrorMessage } from '../../utils/errorHandler';
-import { useCallback } from 'react';
 
 const GET_COLLECTION = gql`
   query GetCollection($id: String!) {
@@ -44,12 +44,16 @@ export default function CollectionDetailScreen() {
     context: {
       skipErrorToast: true, // Обрабатываем ошибки вручную
     },
-    onError: (err) => {
-      console.error('Error loading collection:', err);
-      const errorMessage = getErrorMessage(err);
-      showError(errorMessage);
-    },
   });
+  
+  // Обработка ошибок через useEffect вместо onError (deprecated)
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading collection:', error);
+      const errorMessage = getErrorMessage(error);
+      showError(errorMessage);
+    }
+  }, [error]);
   
   // Перезагружаем коллекцию при возврате на экран
   useFocusEffect(
@@ -64,25 +68,25 @@ export default function CollectionDetailScreen() {
 
   if (loading && !collection) {
     return (
-      <View style={styles.centered}>
+      <SafeAreaView style={styles.centered} edges={['top']}>
         <ActivityIndicator size="large" />
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!collection) {
     return (
-      <View style={styles.centered}>
+      <SafeAreaView style={styles.centered} edges={['top']}>
         <EmptyState
           icon="folder-search-outline"
           title={t('collections.notFound')}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <Stack.Screen
         options={{
           title: `${collection.icon || '📚'} ${collection.name}`,
@@ -125,15 +129,20 @@ export default function CollectionDetailScreen() {
           );
         }}
       />
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
   container: {
     backgroundColor: Colors.background,
     padding: 24,
     gap: 12,
+    paddingBottom: 120,
   },
   centered: {
     flex: 1,

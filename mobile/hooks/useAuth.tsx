@@ -1,12 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { api, saveTokens, clearTokens } from '../services/api';
+import { api, saveTokens, clearTokens, rateLimits } from '../services/api';
 import { User, LoginInput, RegisterInput, AuthResponse } from '../types/api.types';
+import { getErrorMessage } from '../utils/errorHandler';
+import { showError } from '../utils/toast';
+
+interface RateLimits {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  rateLimitsInfo: RateLimits;
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
@@ -22,9 +31,23 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [rateLimitsInfo, setRateLimitsInfo] = useState<RateLimits>({
+    limit: 50,
+    remaining: 50,
+    reset: Date.now(),
+  });
 
   useEffect(() => {
     loadUser();
+    
+    // Подписываемся на обновления rate limits
+    const unsubscribe = rateLimits.subscribe((limits) => {
+      setRateLimitsInfo(limits);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const loadUser = async () => {
@@ -51,24 +74,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (input: LoginInput) => {
     try {
-      const { data } = await api.post<AuthResponse>('/auth/login', input);
+      const { data } = await api.post<AuthResponse>('/auth/login', input, {
+        skipErrorToast: true,
+      } as any);
       await saveTokens(data.accessToken, data.refreshToken);
       setUser(data.user);
     } catch (error: any) {
       console.error('Login error:', error);
-      const message = error.response?.data?.message || error.message || 'Ошибка входа';
+      const message = getErrorMessage(error);
+      showError(message, 'Ошибка входа');
       throw new Error(message);
     }
   };
 
   const register = async (input: RegisterInput) => {
     try {
-      const { data } = await api.post<AuthResponse>('/auth/register', input);
+      // Исключаем confirmPassword из отправки на бэкенд
+      const { confirmPassword, ...registerData } = input as any;
+      
+      const { data } = await api.post<AuthResponse>('/auth/register', registerData, {
+        skipErrorToast: true,
+      } as any);
       await saveTokens(data.accessToken, data.refreshToken);
       setUser(data.user);
     } catch (error: any) {
       console.error('Register error:', error);
-      const message = error.response?.data?.message || error.message || 'Ошибка регистрации';
+      const message = getErrorMessage(error);
+      showError(message, 'Ошибка регистрации');
       throw new Error(message);
     }
   };
@@ -95,6 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     isLoading,
     isAuthenticated: !!user,
+    rateLimitsInfo,
     login,
     register,
     logout,

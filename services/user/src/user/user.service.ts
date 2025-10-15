@@ -2,15 +2,40 @@ import { Injectable, NotFoundException, BadRequestException, UnauthorizedExcepti
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private redisService: RedisService,
+  ) {}
 
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
     });
+  }
+
+  /**
+   * Получить пользователя с актуальным счетчиком запросов из Redis
+   */
+  async findByIdWithRateLimits(id: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    // Получаем актуальное количество запросов из Redis
+    const dailyRequestsUsed = await this.redisService.getDailyRequests(id);
+
+    return {
+      ...user,
+      dailyRequestsUsed,
+    };
   }
 
   async findByEmail(email: string): Promise<User | null> {

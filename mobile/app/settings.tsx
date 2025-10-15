@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Text, Card, Switch, Divider, TextInput, Button } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Text, Card, Switch, TextInput, Button } from 'react-native-paper';
 import { useMutation, gql } from '@apollo/client';
 import { useAuth } from '../hooks/useAuth';
 import { Colors } from '../constants/Colors';
@@ -14,7 +15,6 @@ const UPDATE_PROFILE = gql`
     updateProfile(input: $input) {
       id
       username
-      displayName
     }
   }
 `;
@@ -32,13 +32,11 @@ export default function SettingsScreen() {
   
   // Profile fields
   const [username, setUsername] = useState(user?.username || '');
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
   
   // Update fields when user data loads
   useEffect(() => {
     if (user) {
       setUsername(user.username || '');
-      setDisplayName(user.displayName || '');
     }
   }, [user]);
   
@@ -48,39 +46,72 @@ export default function SettingsScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   
   // UI state
-  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
+  const [isWordOfDayEnabled, setIsWordOfDayEnabled] = useState(true);
   const { refreshUser } = useAuth();
 
-  const [updateProfile, { loading: updatingProfile }] = useMutation(UPDATE_PROFILE, {
+  // Load word of day setting from AsyncStorage
+  useEffect(() => {
+    const loadWordOfDaySetting = async () => {
+      try {
+        const value = await AsyncStorage.getItem('wordOfDayEnabled');
+        if (value !== null) {
+          setIsWordOfDayEnabled(JSON.parse(value));
+        }
+      } catch (error) {
+        console.error('Failed to load word of day setting:', error);
+      }
+    };
+    loadWordOfDaySetting();
+  }, []);
+
+  // Save word of day setting to AsyncStorage
+  const handleWordOfDayToggle = async (value: boolean) => {
+    setIsWordOfDayEnabled(value);
+    try {
+      await AsyncStorage.setItem('wordOfDayEnabled', JSON.stringify(value));
+    } catch (error) {
+      console.error('Failed to save word of day setting:', error);
+      showError('Не удалось сохранить настройку');
+    }
+  };
+
+  const [updateProfile, { loading: updatingProfile, error: profileError }] = useMutation(UPDATE_PROFILE, {
     onCompleted: async () => {
       showSuccess(t('settings.profileUpdated'));
       // Обновляем данные пользователя
       await refreshUser();
-    },
-    onError: (error) => {
-      const errorMessage = getErrorMessage(error);
-      showError(errorMessage);
     },
     context: {
       skipErrorToast: true, // Обрабатываем ошибки вручную
     },
   });
 
-  const [changePassword, { loading: changingPassword }] = useMutation(CHANGE_PASSWORD, {
+  const [changePassword, { loading: changingPassword, error: passwordError }] = useMutation(CHANGE_PASSWORD, {
     onCompleted: () => {
       showSuccess(t('settings.passwordChanged'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     },
-    onError: (error) => {
-      const errorMessage = getErrorMessage(error);
-      showError(errorMessage);
-    },
     context: {
       skipErrorToast: true,
     },
   });
+
+  // Обработка ошибок через useEffect вместо onError (deprecated)
+  useEffect(() => {
+    if (profileError) {
+      const errorMessage = getErrorMessage(profileError);
+      showError(errorMessage);
+    }
+  }, [profileError]);
+
+  useEffect(() => {
+    if (passwordError) {
+      const errorMessage = getErrorMessage(passwordError);
+      showError(errorMessage);
+    }
+  }, [passwordError]);
 
   const handleSaveProfile = () => {
     const input: any = {};
@@ -109,21 +140,10 @@ export default function SettingsScreen() {
       input.username = trimmedUsername;
     }
     
-    if (displayName !== user?.displayName) {
-      const trimmedDisplayName = displayName.trim();
-      
-      if (trimmedDisplayName.length > 100) {
-        showError('Отображаемое имя не может быть длиннее 100 символов');
-        return;
-      }
-      
-      input.displayName = trimmedDisplayName || null;
-    }
-    
     if (Object.keys(input).length > 0) {
       updateProfile({ variables: { input } });
     } else {
-      showError('Нет изменений');
+      showError('Нет изменений для сохранения');
     }
   };
 
@@ -173,21 +193,18 @@ export default function SettingsScreen() {
             mode="outlined"
             style={styles.input}
             autoCapitalize="none"
-            helperText="Только буквы, цифры и подчеркивания (3-50 символов)"
           />
-          <TextInput
-            label={t('auth.displayName')}
-            value={displayName}
-            onChangeText={setDisplayName}
-            mode="outlined"
-            style={styles.input}
-          />
+          <Text variant="bodySmall" style={styles.helperText}>
+            Только буквы, цифры и подчеркивания (3-50 символов)
+          </Text>
           <Button 
             mode="contained" 
             onPress={handleSaveProfile}
             loading={updatingProfile}
-            disabled={updatingProfile || (username === user?.username && displayName === user?.displayName)}
+            disabled={updatingProfile || username === user?.username}
             style={styles.button}
+            contentStyle={{ height: 48 }}
+            labelStyle={styles.buttonLabel}
           >
             {t('common.save')}
           </Button>
@@ -234,6 +251,8 @@ export default function SettingsScreen() {
             loading={changingPassword}
             disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
             style={styles.button}
+            contentStyle={{ height: 48 }}
+            labelStyle={styles.buttonLabel}
           >
             {t('settings.changePassword')}
           </Button>
@@ -248,19 +267,12 @@ export default function SettingsScreen() {
       <Card style={styles.card}>
         <View style={styles.settingItem}>
           <View>
-            <Text style={styles.settingLabel}>{t('settings.darkTheme')}</Text>
-            <Text style={styles.settingDescription}>{t('common.soon')}</Text>
-          </View>
-          <Switch value={false} disabled={true} />
-        </View>
-        <Divider />
-        <View style={styles.settingItem}>
-          <View>
             <Text style={styles.settingLabel}>{t('settings.wordOfTheDay')}</Text>
+            <Text style={styles.settingDescription}>Показывать слово дня на главном экране</Text>
           </View>
           <Switch 
-            value={isNotificationsEnabled} 
-            onValueChange={setIsNotificationsEnabled} 
+            value={isWordOfDayEnabled} 
+            onValueChange={handleWordOfDayToggle} 
           />
         </View>
       </Card>
@@ -295,9 +307,18 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: Colors.white,
   },
+  helperText: {
+    color: Colors.textLight,
+    marginTop: -8,
+    marginBottom: 4,
+  },
   button: {
     marginTop: 8,
     backgroundColor: Colors.primary,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   passwordHint: {
     color: Colors.textLight,

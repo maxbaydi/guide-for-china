@@ -8,6 +8,8 @@ import * as Clipboard from 'expo-clipboard';
 import { api } from '../../services/api';
 import { CharacterAnalysis } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
+import { showError } from '../../utils/toast';
+import { getErrorMessage } from '../../utils/errorHandler';
 
 export default function AnalyzeScreen() {
   const { t } = useTranslation();
@@ -31,9 +33,9 @@ export default function AnalyzeScreen() {
       });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || t('errors.analysisFailed');
-      console.error('Analysis failed:', message);
-      // Toast/Snackbar можно добавить позже
+      console.error('Analysis failed:', error);
+      const message = getErrorMessage(error);
+      showError(message, t('errors.analysisFailed'));
     },
   });
 
