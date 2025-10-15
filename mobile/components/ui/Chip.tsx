@@ -1,6 +1,5 @@
 import React from 'react';
-import { Chip as PaperChip } from 'react-native-paper';
-import { StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Colors } from '../../constants/Colors';
 
 interface ChipProps {
@@ -15,29 +14,34 @@ export const Chip: React.FC<ChipProps> = ({
   selected = false,
 }) => {
   return (
-    <PaperChip
-      mode="flat"
+    <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.8}
       style={[styles.chip, selected && styles.selectedChip]}
-      textStyle={[styles.text, selected && styles.selectedText]}
     >
-      {children}
-    </PaperChip>
+      <Text style={[styles.text, selected && styles.selectedText]}>
+        {children}
+      </Text>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: 'rgba(229, 231, 235, 0.5)', // bg-gray-200/50
+    backgroundColor: Colors.borderLight, // gray-100
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
   selectedChip: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary, // cyan-500
   },
   text: {
-    color: Colors.text,
-    fontFamily: 'Noto Serif SC',
+    color: Colors.text, // gray-800
+    fontWeight: '600',
+    fontSize: 14,
   },
   selectedText: {
     color: Colors.white,
-  }
+  },
 });

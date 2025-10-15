@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ScrollView, View, StyleSheet, AppState } from 'react-native';
+import { ScrollView, View, StyleSheet, AppState, Text } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Text, Avatar, Card, Paragraph, Button, ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { APP_CONFIG } from '../../constants/config';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { Chip } from '../../components/ui/Chip';
+import { Card } from '../../components/ui/Card';
+import { Avatar } from '../../components/ui/Avatar';
+import { CustomButton } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/Colors';
 import { api } from '../../services/api';
@@ -100,12 +103,15 @@ export default function SearchScreen() {
     >
       <View style={styles.header}>
         <View>
-          <Text variant="bodySmall" style={styles.headerGreeting}>{t('search.greeting')}</Text>
-          <Text variant="headlineMedium" style={styles.headerName}>
+          <Text style={styles.headerGreeting}>{t('search.greeting')}</Text>
+          <Text style={styles.headerName}>
             {user?.username || 'Test User'}
           </Text>
         </View>
-        <Avatar.Icon size={40} icon="account-circle" />
+        <Avatar 
+          initials={user?.username?.charAt(0) || 'U'} 
+          size={40}
+        />
       </View>
 
       <SearchBar
@@ -115,21 +121,18 @@ export default function SearchScreen() {
         onSubmitEditing={handleSearch}
       />
       
-      <Button 
-        mode="contained" 
+      <CustomButton 
+        variant="primary"
         onPress={handleSearch}
         disabled={!query.trim()}
         style={styles.searchButton}
-        contentStyle={{ height: 48 }}
-        labelStyle={styles.searchButtonLabel}
-        icon="magnify"
       >
         {t('search.searchButton')}
-      </Button>
+      </CustomButton>
       
       {searchHistory.length > 0 && (
         <View style={styles.section}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>{t('search.history')}</Text>
+          <Text style={styles.sectionTitle}>{t('search.history')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipContainer}>
             {searchHistory.map((item, index) => (
               <Chip
@@ -145,16 +148,16 @@ export default function SearchScreen() {
 
       {isWordOfDayEnabled && (
         <View style={styles.section}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>{t('search.wordOfTheDay')}</Text>
+          <Text style={styles.sectionTitle}>{t('search.wordOfTheDay')}</Text>
           {isLoadingWord ? (
             <Card style={styles.wordOfTheDayCard}>
-              <Card.Content style={styles.wordOfTheDayContent}>
-                <ActivityIndicator size="large" color={Colors.primary} />
-              </Card.Content>
+              <View style={styles.wordOfTheDayContent}>
+                <ActivityIndicator size="large" color={Colors.white} />
+              </View>
             </Card>
           ) : wordOfTheDay ? (
-            <Card style={styles.wordOfTheDayCard} onPress={() => navigateToCharacter(wordOfTheDay.id)}>
-              <Card.Content style={styles.wordOfTheDayContent}>
+            <Card variant="gradient" onPress={() => navigateToCharacter(wordOfTheDay.id)} style={styles.wordOfTheDayCard}>
+              <View style={styles.wordOfTheDayContent}>
                 <Text style={styles.wordOfTheDayChar}>{wordOfTheDay.simplified}</Text>
                 <View style={styles.wordOfTheDayInfo}>
                   <Text style={styles.wordOfTheDayTranslation}>
@@ -168,15 +171,15 @@ export default function SearchScreen() {
                     </Text>
                   )}
                 </View>
-              </Card.Content>
+              </View>
             </Card>
           ) : wordError ? (
-            <Card style={styles.wordOfTheDayCard}>
-              <Card.Content>
-                <Text style={{ color: Colors.textLight, textAlign: 'center' }}>
+            <Card variant="gradient" style={styles.wordOfTheDayCard}>
+              <View>
+                <Text style={{ color: Colors.white, textAlign: 'center' }}>
                   {t('search.wordOfTheDayUnavailable')}
                 </Text>
-              </Card.Content>
+              </View>
             </Card>
           ) : null}
         </View>
@@ -203,16 +206,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerGreeting: {
-    color: Colors.textLight,
+    fontSize: 14,
+    color: Colors.textLight, // gray-500
   },
   headerName: {
-    fontWeight: 'bold',
-    color: Colors.text,
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.text, // gray-800
   },
   section: {
     gap: 12,
   },
   sectionTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: Colors.text,
   },
@@ -220,19 +226,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   wordOfTheDayCard: {
-    backgroundColor: '#FFF0F0', // A light red, similar to 'from-red-50 to-red-100'
-    borderColor: '#FED7D7', // red-200/50
-    borderWidth: 1,
+    borderRadius: 16,
   },
   wordOfTheDayContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+    padding: 0,
   },
   wordOfTheDayChar: {
     fontFamily: 'Noto Serif SC',
     fontSize: 52,
-    color: Colors.primary,
+    fontWeight: '700',
+    color: Colors.white,
   },
   wordOfTheDayInfo: {
     flex: 1,
@@ -241,15 +247,15 @@ const styles = StyleSheet.create({
   wordOfTheDayTranslation: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000', // Черный цвет для контраста с розовым фоном
+    color: Colors.white,
   },
   wordOfTheDayExample: {
     fontSize: 14,
-    color: '#4A5568', // Темно-серый цвет для лучшей читаемости
-    fontStyle: 'italic',
+    color: Colors.white,
+    opacity: 0.9,
   },
   searchButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary, // orange-500
   },
   searchButtonLabel: {
     fontSize: 16,

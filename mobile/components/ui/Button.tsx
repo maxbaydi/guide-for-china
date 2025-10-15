@@ -1,49 +1,107 @@
 import React from 'react';
-import { Button as PaperButton } from 'react-native-paper';
-import { StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { Colors } from '../../constants/Colors';
+
+type ButtonVariant = 'primary' | 'secondary' | 'outlined' | 'dashed';
 
 interface CustomButtonProps {
   children: React.ReactNode;
   onPress: () => void;
-  mode?: 'text' | 'outlined' | 'contained' | 'elevated' | 'contained-tonal';
+  variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
-  style?: any;
-  icon?: string;
+  style?: ViewStyle;
+  icon?: React.ReactNode;
 }
 
 export const CustomButton: React.FC<CustomButtonProps> = ({
   children,
   onPress,
-  mode = 'contained',
+  variant = 'primary',
   loading = false,
   disabled = false,
   style,
   icon,
 }) => {
+  const buttonStyle = [
+    styles.button,
+    styles[variant],
+    disabled && styles.disabled,
+    style,
+  ];
+
+  const textStyle = [
+    styles.text,
+    styles[`${variant}Text` as keyof typeof styles] as TextStyle,
+    disabled && styles.disabledText,
+  ];
+
   return (
-    <PaperButton
-      mode={mode}
+    <TouchableOpacity
       onPress={onPress}
-      loading={loading}
-      disabled={disabled}
-      icon={icon}
-      style={[styles.button, style]}
-      labelStyle={styles.label}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
+      style={buttonStyle}
     >
-      {children}
-    </PaperButton>
+      {loading ? (
+        <ActivityIndicator color={variant === 'outlined' ? Colors.text : Colors.white} />
+      ) : (
+        <>
+          {icon && icon}
+          <Text style={textStyle}>{children}</Text>
+        </>
+      )}
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
   },
-  label: {
+  primary: {
+    backgroundColor: Colors.secondary, // orange-500
+  },
+  secondary: {
+    backgroundColor: Colors.primary, // cyan-500
+    paddingVertical: 8,
+  },
+  outlined: {
+    backgroundColor: Colors.border, // gray-200
+  },
+  dashed: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: Colors.gray, // gray-300
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  text: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  primaryText: {
+    color: Colors.white,
+  },
+  secondaryText: {
+    color: Colors.white,
+  },
+  outlinedText: {
+    color: Colors.text, // gray-800
+  },
+  dashedText: {
+    color: Colors.textLight, // gray-500
+  },
+  disabledText: {
+    opacity: 0.7,
   },
 });
 

@@ -1,12 +1,14 @@
 import { useCallback, useEffect } from 'react';
-import { FlatList, View, StyleSheet } from 'react-native';
+import { FlatList, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
-import { Text, Card, Button, Divider, ActivityIndicator } from 'react-native-paper';
+import { Divider, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Collection } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
+import { Card } from '../../components/ui/Card';
+import { CustomButton } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { showError } from '../../utils/toast';
 import { getErrorMessage } from '../../utils/errorHandler';
@@ -62,14 +64,14 @@ export default function CollectionsScreen() {
 
   return (
     <View style={styles.container}>
-        <View style={styles.header}>
-          <Text variant="headlineLarge" style={styles.title}>
-            {t('collections.title')}
-          </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
-            {t('collections.subtitle')}
-          </Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.title}>
+          {t('collections.title')}
+        </Text>
+        <Text style={styles.subtitle}>
+          {t('collections.subtitle')}
+        </Text>
+      </View>
 
       <Card style={styles.card}>
         <FlatList
@@ -77,33 +79,36 @@ export default function CollectionsScreen() {
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={() => <Divider />}
           ListEmptyComponent={
-              <EmptyState
-                icon="folder-multiple-outline"
-                title={t('collections.emptyCollection') || 'Нет коллекций'}
-                description={t('collections.emptyDescription') || 'Создайте первую коллекцию'}
-             />
+            <EmptyState
+              icon="folder-multiple-outline"
+              title={t('collections.emptyCollection') || 'Нет коллекций'}
+              description={t('collections.emptyDescription') || 'Создайте первую коллекцию'}
+            />
           }
           renderItem={({ item }) => (
-            <Card.Content style={styles.collectionItem} onTouchEnd={() => router.push(`/collection/${item.id}`)}>
-                <View>
-                  <Text style={styles.collectionName}>{item.icon} {item.name}</Text>
-                  <Text style={styles.collectionMeta}>{item.itemCount} {t('collections.words')}</Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.textLight} />
-            </Card.Content>
+            <TouchableOpacity 
+              style={styles.collectionItem} 
+              onPress={() => router.push(`/collection/${item.id}`)}
+              activeOpacity={0.7}
+            >
+              <View>
+                <Text style={styles.collectionName}>{item.icon} {item.name}</Text>
+                <Text style={styles.collectionMeta}>{item.itemCount} {t('collections.words')}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.textLight} />
+            </TouchableOpacity>
           )}
         />
       </Card>
       
-       <Button 
-          mode="text" 
-          onPress={handleCreateCollection} 
-          style={styles.createButton}
-          labelStyle={styles.createButtonText}
-          icon="plus"
-        >
-          {t('collections.createNew')}
-        </Button>
+      <CustomButton 
+        variant="dashed"
+        onPress={handleCreateCollection}
+        style={styles.createButton}
+        icon={<MaterialCommunityIcons name="plus" size={20} color={Colors.textLight} />}
+      >
+        {t('collections.createNew')}
+      </CustomButton>
     </View>
   );
 }
@@ -118,46 +123,45 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   centered: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     marginBottom: 8,
   },
   title: {
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.text,
   },
   subtitle: {
+    fontSize: 16,
     color: Colors.textLight,
+    marginTop: 4,
   },
   card: {
     backgroundColor: Colors.white,
+    flex: 1,
   },
   collectionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
   },
   collectionName: {
     fontSize: 16,
     fontWeight: '600',
+    color: Colors.text,
   },
   collectionMeta: {
     color: Colors.textLight,
     fontSize: 14,
+    marginTop: 4,
   },
   createButton: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: Colors.border,
-    paddingVertical: 8,
+    marginTop: 12,
   },
-  createButtonText: {
-      color: Colors.textLight,
-      fontWeight: '600',
-  }
 });

@@ -5,8 +5,9 @@ export const lightTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: Colors.primary,
-    secondary: Colors.secondary,
+    primary: Colors.primary,           // cyan-500
+    secondary: Colors.secondary,       // orange-500
+    tertiary: Colors.blue,             // blue-600
     error: Colors.error,
     background: Colors.background,
     surface: Colors.white,
@@ -14,6 +15,8 @@ export const lightTheme = {
     onSurface: Colors.text,
     onSurfaceVariant: Colors.textLight,
     outline: Colors.border,
+    primaryContainer: Colors.backgroundLight,
+    secondaryContainer: Colors.secondaryDark,
   },
 };
 

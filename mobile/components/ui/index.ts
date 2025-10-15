@@ -5,3 +5,6 @@ export { CharacterCard } from './CharacterCard';
 export { EmptyState } from './EmptyState';
 export { LoadingSpinner } from './LoadingSpinner';
 export { Chip } from './Chip';
+export { IconButton } from './IconButton';
+export { ProgressBar } from './ProgressBar';
+export { Avatar } from './Avatar';
