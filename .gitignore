@@ -51,3 +51,18 @@ temp/
 *.sqlite3
 pgdata/
 
+# Database backups and dumps
+backup/*
+!backup/README.md
+*.sql
+*.sql.gz
+
+# Dictionary data files
+db_bkrs/*
+!db_bkrs/README.md
+
+# Ignore all markdown files except README
+*.md
+!README.md
+!**/README.md
+
