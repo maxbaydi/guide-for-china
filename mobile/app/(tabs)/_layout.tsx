@@ -2,11 +2,11 @@ import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/Colors';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 
 /**
  * Layout для основных табов приложения
- * Material Design с React Native Paper
+ * С индикатором активной вкладки
  */
 export default function TabsLayout() {
   const { t } = useTranslation();
@@ -15,13 +15,13 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textLight,
+        tabBarActiveTintColor: Colors.primaryDark, // cyan-600
+        tabBarInactiveTintColor: Colors.textLight, // gray-500
         tabBarStyle: {
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
           position: 'absolute',
           borderTopColor: Colors.border,
-          borderTopWidth: 0.5,
+          borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 90 : 70,
           paddingBottom: Platform.OS === 'ios' ? 30 : 12,
           paddingTop: 8,

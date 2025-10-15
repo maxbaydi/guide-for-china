@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { ScrollView, KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, Platform, View, StyleSheet, Text, TextInput as RNTextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
-import { Text, TextInput, Button } from 'react-native-paper';
 import * as Clipboard from 'expo-clipboard';
 import { api } from '../../services/api';
 import { CharacterAnalysis } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
+import { CustomButton } from '../../components/ui/Button';
 import { showError } from '../../utils/toast';
 import { getErrorMessage } from '../../utils/errorHandler';
 
@@ -83,25 +83,25 @@ export default function AnalyzeScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text variant="headlineLarge" style={styles.title}>
+          <Text style={styles.title}>
             {t('analyze.title')}
           </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
+          <Text style={styles.subtitle}>
             {t('analyze.subtitle')}
           </Text>
         </View>
 
-        <TextInput
+        <RNTextInput
           value={text}
           onChangeText={handleTextChange}
           placeholder={t('analyze.placeholder') || '我爱学中文...'}
+          placeholderTextColor={Colors.textLight}
           multiline
           style={styles.textInput}
           maxLength={MAX_TEXT_LENGTH}
         />
 
         <Text 
-          variant="bodySmall" 
           style={[
             styles.characterCount,
             text.length >= MAX_TEXT_LENGTH && styles.characterCountLimit
@@ -111,35 +111,32 @@ export default function AnalyzeScreen() {
         </Text>
 
         <View style={styles.buttonRow}>
-          <Button 
-            mode="elevated" 
-            onPress={handlePaste} 
-            style={styles.secondaryButton} 
-            labelStyle={styles.secondaryButtonText}
+          <CustomButton 
+            variant="outlined"
+            onPress={handlePaste}
+            style={styles.secondaryButton}
           >
             {t('analyze.pasteButton')}
-          </Button>
-          <Button 
-            mode="elevated" 
-            onPress={handleClear} 
-            style={styles.secondaryButton}
-            labelStyle={styles.secondaryButtonText}
+          </CustomButton>
+          <CustomButton 
+            variant="outlined"
+            onPress={handleClear}
             disabled={!text}
+            style={styles.secondaryButton}
           >
             {t('analyze.clearButton')}
-          </Button>
+          </CustomButton>
         </View>
         
-        <Button
-          mode="contained"
+        <CustomButton
+          variant="primary"
           onPress={handleAnalyze}
           loading={analyzeMutation.isPending}
           disabled={!text.trim() || analyzeMutation.isPending || text.length > MAX_TEXT_LENGTH}
           style={styles.analyzeButton}
-          labelStyle={styles.analyzeButtonLabel}
         >
           {t('analyze.analyzeButton')}
-        </Button>
+        </CustomButton>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -160,27 +157,35 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.text,
   },
   subtitle: {
+    fontSize: 16,
     color: Colors.textLight,
+    marginTop: 4,
   },
   textInput: {
-    minHeight: 200,
+    minHeight: 192, // h-48
     maxHeight: 400,
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.text,
     textAlignVertical: 'top',
   },
   characterCount: {
+    fontSize: 12,
     color: Colors.textLight,
     textAlign: 'right',
     marginTop: -16,
   },
   characterCountLimit: {
-    color: Colors.primary,
+    color: Colors.secondary, // orange-500
     fontWeight: '600',
   },
   buttonRow: {
@@ -189,19 +194,8 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: 'rgba(229, 231, 235, 0.8)',
-  },
-  secondaryButtonText: {
-    color: Colors.text,
-    fontWeight: '600',
-    paddingVertical: 8,
   },
   analyzeButton: {
-    paddingVertical: 8,
-    backgroundColor: Colors.primary,
+    width: '100%',
   },
-  analyzeButtonLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  }
 });

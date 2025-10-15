@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { Text, IconButton, Card, ActivityIndicator, Button, Divider } from 'react-native-paper';
+import { ActivityIndicator, Divider } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api } from '../../services/api';
 import { Character, SimilarWord, ReverseTranslation } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
+import { Card } from '../../components/ui/Card';
+import { IconButton } from '../../components/ui/IconButton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AddToCollectionModal } from '../../components/AddToCollectionModal';
 import { DefinitionGroup } from '../../components/character/DefinitionGroup';
@@ -63,8 +66,8 @@ export default function CharacterDetailScreen() {
   const HeaderRight = () => (
     <IconButton
       icon="bookmark-plus-outline"
-      iconColor={Colors.textLight}
       onPress={() => setModalVisible(true)}
+      color={Colors.primaryDark}
     />
   );
   
@@ -98,29 +101,30 @@ export default function CharacterDetailScreen() {
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <Card style={styles.characterCard}>
-          <Card.Content style={styles.characterCardContent}>
+          <View style={styles.characterCardContent}>
             <Text style={styles.character}>{character.simplified}</Text>
             <View style={styles.pinyinRow}>
               <Text style={styles.pinyin}>{character.pinyin}</Text>
               <IconButton
                 icon="volume-high"
-                size={24}
-                iconColor={Colors.textLight}
                 onPress={() => console.log('Play audio')}
+                size={20}
               />
             </View>
-          </Card.Content>
+          </View>
         </Card>
 
         {(character.hskLevel || character.frequency) && (
           <Card style={styles.statsCard}>
-            <Card.Content style={styles.statsRow}>
+            <View style={styles.statsRow}>
               {character.hskLevel && (
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>HSK</Text>
-                  <Text style={[styles.statValue, { color: Colors.secondary }]}>
-                    {character.hskLevel}
-                  </Text>
+                  <View style={styles.hskBadge}>
+                    <Text style={styles.hskBadgeText}>
+                      {character.hskLevel}
+                    </Text>
+                  </View>
                 </View>
               )}
               {character.frequency && (
@@ -129,44 +133,48 @@ export default function CharacterDetailScreen() {
                   <Text style={styles.statValue}>{character.frequency}</Text>
                 </View>
               )}
-            </Card.Content>
+            </View>
           </Card>
         )}
         
         <View>
           <View style={styles.tabContainer}>
-            <Button
-              mode="text"
+            <TouchableOpacity
               onPress={() => setActiveTab('definitions')}
-              labelStyle={[styles.tabButton, activeTab === 'definitions' && styles.activeTabText]}
               style={[styles.tab, activeTab === 'definitions' && styles.activeTab]}
+              activeOpacity={0.7}
             >
-              {t('character.definitions')}
-            </Button>
-            <Button
-              mode="text"
+              <Text style={[styles.tabButton, activeTab === 'definitions' && styles.activeTabText]}>
+                {t('character.definitions')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => setActiveTab('examples')}
-              labelStyle={[styles.tabButton, activeTab === 'examples' && styles.activeTabText]}
               style={[styles.tab, activeTab === 'examples' && styles.activeTab]}
+              activeOpacity={0.7}
             >
-              {t('character.examples')}
-            </Button>
-            <Button
-              mode="text"
+              <Text style={[styles.tabButton, activeTab === 'examples' && styles.activeTabText]}>
+                {t('character.examples')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => setActiveTab('similar')}
-              labelStyle={[styles.tabButton, activeTab === 'similar' && styles.activeTabText]}
               style={[styles.tab, activeTab === 'similar' && styles.activeTab]}
+              activeOpacity={0.7}
             >
-              {t('character.similarWords')}
-            </Button>
-            <Button
-              mode="text"
+              <Text style={[styles.tabButton, activeTab === 'similar' && styles.activeTabText]}>
+                {t('character.similarWords')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => setActiveTab('reverse')}
-              labelStyle={[styles.tabButton, activeTab === 'reverse' && styles.activeTabText]}
               style={[styles.tab, activeTab === 'reverse' && styles.activeTab]}
+              activeOpacity={0.7}
             >
-              {t('character.reverseTranslations')}
-            </Button>
+              <Text style={[styles.tabButton, activeTab === 'reverse' && styles.activeTabText]}>
+                {t('character.reverseTranslations')}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.tabContent}>
@@ -200,22 +208,21 @@ export default function CharacterDetailScreen() {
               <View style={styles.similarList}>
                 {similarWords && similarWords.length > 0 ? (
                   similarWords.map((word, idx) => (
-                    <View key={`${word.id}-${idx}`}>
-                      <Card 
-                        style={styles.similarCard}
-                        onPress={() => router.push(`/character/${word.id}`)}
-                      >
-                        <Card.Content style={styles.similarContent}>
-                          <View style={styles.similarLeft}>
-                            <Text style={styles.similarChinese}>{word.simplified}</Text>
-                            <Text style={styles.similarPinyin}>{word.pinyin}</Text>
-                          </View>
-                          <Text style={styles.similarTranslation} numberOfLines={2}>
-                            {word.mainTranslation}
-                          </Text>
-                        </Card.Content>
-                      </Card>
-                    </View>
+                    <Card 
+                      key={`${word.id}-${idx}`}
+                      style={styles.similarCard}
+                      onPress={() => router.push(`/character/${word.id}`)}
+                    >
+                      <View style={styles.similarContent}>
+                        <View style={styles.similarLeft}>
+                          <Text style={styles.similarChinese}>{word.simplified}</Text>
+                          <Text style={styles.similarPinyin}>{word.pinyin}</Text>
+                        </View>
+                        <Text style={styles.similarTranslation} numberOfLines={2}>
+                          {word.mainTranslation}
+                        </Text>
+                      </View>
+                    </Card>
                   ))
                 ) : (
                   <Text style={styles.noExamplesText}>{t('character.noSimilarWords')}</Text>
@@ -285,24 +292,28 @@ const styles = StyleSheet.create({
   },
   characterCard: {
     backgroundColor: Colors.white,
+    borderRadius: 16,
   },
   characterCardContent: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 8,
+    padding: 0,
   },
   character: {
     fontFamily: 'Noto Serif SC',
     fontSize: 80,
-    color: Colors.primary,
+    fontWeight: '700',
+    color: Colors.text, // gray-800
   },
   pinyinRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
+    gap: 8,
   },
   pinyin: {
     fontSize: 24,
-    fontWeight: '600',
+    color: Colors.textLight, // gray-500
   },
   statsCard: {
     backgroundColor: Colors.white,
@@ -311,10 +322,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 8,
+    padding: 0,
   },
   statItem: {
     alignItems: 'center',
-    gap: 2,
+    gap: 8,
   },
   statLabel: {
     color: Colors.textLight,
@@ -322,6 +334,18 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  hskBadge: {
+    backgroundColor: Colors.secondary, // orange-500
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  hskBadgeText: {
+    color: Colors.white,
+    fontSize: 14,
     fontWeight: '600',
   },
   tabContainer: {
@@ -331,19 +355,21 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    borderRadius: 0,
+    paddingVertical: 12,
+    alignItems: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent'
+    borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: Colors.primary,
+    borderBottomColor: Colors.primary, // cyan-500
   },
   tabButton: {
-    color: Colors.textLight,
+    fontSize: 14,
+    color: Colors.textLight, // gray-500
     fontWeight: '600',
   },
   activeTabText: {
-    color: Colors.primary,
+    color: Colors.primaryDark, // cyan-600
   },
   tabContent: {
     paddingTop: 16,
@@ -367,13 +393,13 @@ const styles = StyleSheet.create({
   },
   similarCard: {
     backgroundColor: Colors.white,
-    marginBottom: 8,
   },
   similarContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+    padding: 0,
   },
   similarLeft: {
     gap: 4,

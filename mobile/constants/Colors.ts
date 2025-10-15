@@ -1,32 +1,40 @@
 /**
  * Цветовая палитра HanGuide
- * Основана на дизайне из templatefront.html
+ * Основана на дизайне из style.md - cyan/голубой + оранжевый
  */
 
 export const Colors = {
-  // Основные цвета
-  primary: '#E53935',        // Vibrant Red (кнопки, акценты)
-  secondary: '#1DB954',      // Jade Green (прогресс, HSK)
+  // Основные цвета (cyan-500, orange-500)
+  primary: '#06b6d4',        // cyan-500 - основной акцент
+  primaryDark: '#0891b2',    // cyan-600 - для активных состояний
+  primaryLight: '#22d3ee',   // cyan-400 - для градиентов
+  secondary: '#f97316',      // orange-500 - вторичный акцент
+  secondaryDark: '#ea580c',  // orange-600 - активное состояние
   
   // Фоны
-  background: '#F7F7F7',     // Off-white (основной фон)
-  backgroundLight: '#E5E7EB', // Серый для карточек
-  white: '#FFFFFF',
+  background: '#f9fafb',     // gray-50 - основной фон
+  backgroundLight: '#e0f2fe', // cyan-50 - для вспомогательных элементов
+  white: '#ffffff',
   
   // Текст
-  text: '#2D2D2D',           // Dark Charcoal (основной текст)
-  textLight: '#6B7280',      // Светло-серый (второстепенный текст)
-  textDark: '#1F2937',       // Темный текст
+  text: '#1f2937',           // gray-800 - основной текст
+  textLight: '#6b7280',      // gray-500 - второстепенный текст
+  textDark: '#111827',       // gray-900 - темный текст
   
   // Состояния
-  success: '#1DB954',
-  error: '#E53935',
-  warning: '#F59E0B',
-  info: '#3B82F6',
+  success: '#10b981',        // green-500
+  error: '#ef4444',          // red-500
+  warning: '#f59e0b',        // amber-500
+  info: '#3b82f6',           // blue-500
   
   // Границы
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
+  border: '#e5e7eb',         // gray-200
+  borderLight: '#f3f4f6',    // gray-100
+  
+  // Дополнительные цвета
+  blue: '#2563eb',           // blue-600 - для градиентов
+  cyanLight: '#bae6fd',      // cyan-200 - для активных состояний
+  gray: '#d1d5db',           // gray-300
   
   // Shadows
   shadow: 'rgba(0, 0, 0, 0.1)',

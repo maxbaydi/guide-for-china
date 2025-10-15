@@ -1,10 +1,13 @@
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
-import { Text, Avatar, ProgressBar, Card, Button } from 'react-native-paper';
+import { Button } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/Colors';
+import { Avatar } from '../../components/ui/Avatar';
+import { ProgressBar } from '../../components/ui/ProgressBar';
+import { Card } from '../../components/ui/Card';
 import { useEffect } from 'react';
 
 const GET_MY_STATS = gql`
@@ -62,39 +65,43 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
-        <Avatar.Icon size={80} icon="account-circle" style={styles.avatar} />
-        <Text variant="headlineMedium" style={styles.userName}>
+        <Avatar 
+          initials={user?.username?.charAt(0) || 'U'} 
+          size={80}
+        />
+        <Text style={styles.userName}>
           {user?.username || 'Test User'}
         </Text>
-        <Text variant="bodyLarge" style={styles.userEmail}>
+        <Text style={styles.userEmail}>
           {user?.email}
         </Text>
       </View>
 
       <Card style={styles.card}>
-        <Card.Content>
+        <View style={styles.cardContent}>
           <Text style={styles.requestsText}>
             {t('profile.requestsRemainingDaily', { remaining: requestsRemaining, total: requestsLimit })}
           </Text>
           <ProgressBar 
             progress={requestsProgress} 
-            color={requestsProgress > 0.8 ? Colors.error : Colors.primary} 
+            variant={requestsProgress > 0.8 ? 'warning' : 'gradient'}
             style={styles.progressBar} 
           />
           <Text style={styles.dailyLimitInfo}>
             {t('profile.dailyLimitInfo')}
           </Text>
-        </Card.Content>
+        </View>
       </Card>
 
       <Card style={styles.card}>
-        <Card.Title title={t('profile.statistics')} />
-        <Card.Content style={styles.statsRow}>
+        <View style={styles.cardContent}>
+          <Text style={styles.statsTitle}>{t('profile.statistics')}</Text>
+          <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats?.charactersLearned || 0}</Text>
               <Text style={styles.statLabel}>{t('profile.wordsLearned')}</Text>
             </View>
-             <View style={styles.statItem}>
+            <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats?.collectionsCount || 0}</Text>
               <Text style={styles.statLabel}>{t('profile.collections')}</Text>
             </View>
@@ -102,7 +109,8 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>{stats?.searchCount || 0}</Text>
               <Text style={styles.statLabel}>{t('profile.totalSearches')}</Text>
             </View>
-        </Card.Content>
+          </View>
+        </View>
       </Card>
       
       <View style={styles.actions}>
@@ -146,17 +154,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  avatar: {
-    backgroundColor: Colors.backgroundLight,
-  },
   userName: {
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.text, // gray-800
   },
   userEmail: {
-    color: Colors.textLight,
+    fontSize: 16,
+    color: Colors.textLight, // gray-500
   },
   card: {
     backgroundColor: Colors.white,
+  },
+  cardContent: {
+    padding: 0,
   },
   requestsText: {
     textAlign: 'center',
@@ -176,6 +187,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
   },
+  statsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 16,
+  },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -185,27 +202,30 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: Colors.text,
   },
   statLabel: {
+    fontSize: 14,
     color: Colors.textLight,
+    marginTop: 4,
   },
   actions: {
-      gap: 12,
+    gap: 12,
   },
   actionButton: {
-      backgroundColor: Colors.white,
+    backgroundColor: Colors.white,
   },
   actionButtonLabel: {
-      color: Colors.text,
-      fontWeight: '600',
-      fontSize: 16,
+    color: Colors.text,
+    fontWeight: '600',
+    fontSize: 16,
   },
   buttonLabel: {
-      fontWeight: '600',
-      fontSize: 16,
+    fontWeight: '600',
+    fontSize: 16,
   },
   logoutButton: {
-      borderColor: Colors.border,
-  }
+    borderColor: Colors.border,
+  },
 });
