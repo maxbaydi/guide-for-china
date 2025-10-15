@@ -3,6 +3,8 @@ import { DictionaryService } from '../services/dictionary.service';
 import { Character } from '../entities/character.entity';
 import { Phrase } from '../entities/phrase.entity';
 import { CharacterAnalysis } from '../entities/character-analysis.entity';
+import { SimilarWord } from '../entities/similar-word.entity';
+import { ReverseTranslation } from '../entities/reverse-translation.entity';
 
 @Resolver()
 export class DictionaryResolver {
@@ -74,6 +76,28 @@ export class DictionaryResolver {
   })
   async wordOfTheDay(): Promise<Character | null> {
     return this.dictionaryService.getWordOfTheDay();
+  }
+
+  @Query(() => [SimilarWord], {
+    name: 'getSimilarWords',
+    description: 'Получить похожие слова (начинающиеся с иероглифа или содержащие его)',
+  })
+  async getSimilarWords(
+    @Args('simplified', { type: () => String }) simplified: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit: number,
+  ): Promise<SimilarWord[]> {
+    return this.dictionaryService.getSimilarWords(simplified, limit);
+  }
+
+  @Query(() => [ReverseTranslation], {
+    name: 'getReverseTranslations',
+    description: 'Получить обратные переводы из таблицы фраз (где встречается иероглиф)',
+  })
+  async getReverseTranslations(
+    @Args('simplified', { type: () => String }) simplified: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit: number,
+  ): Promise<ReverseTranslation[]> {
+    return this.dictionaryService.getReverseTranslations(simplified, limit);
   }
 }
 

@@ -22,7 +22,10 @@ const createMockUser = (email: string, username?: string): User => {
     id: Math.random().toString(36).substring(2, 15),
     email,
     username: username || email.split('@')[0],
-    role: 'user',
+    displayName: username || email.split('@')[0],
+    subscriptionTier: 'FREE',
+    dailyRequestsUsed: 0,
+    dailyRequestsLimit: 150,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

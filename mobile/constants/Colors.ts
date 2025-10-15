@@ -33,6 +33,19 @@ export const Colors = {
   shadowDark: 'rgba(0, 0, 0, 0.2)',
 };
 
+/**
+ * Цветовая схема для деталей иероглифа
+ * Основана на примере BKRS
+ */
+export const CharacterColors = {
+  highlight: '#10b981',      // Зеленый - выделение иероглифа в примерах
+  pinyin: '#6b7280',         // Серый - пиньинь
+  partOfSpeech: '#f59e0b',   // Оранжевый - части речи (сущ., глагол)
+  context: '#8b5cf6',        // Фиолетовый - контекстные пометки (устар., перен.)
+  secondary: '#64748b',      // Серый - вторичная информация
+  label: '#dc2626',          // Красный - метки и пометки
+};
+
 export const ColorTokens = {
   light: {
     background: Colors.background,

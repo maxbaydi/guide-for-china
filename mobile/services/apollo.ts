@@ -70,6 +70,16 @@ const cache = new InMemoryCache({
             return incoming;
           },
         },
+        getSimilarWords: {
+          merge(existing, incoming) {
+            return incoming;
+          },
+        },
+        getReverseTranslations: {
+          merge(existing, incoming) {
+            return incoming;
+          },
+        },
       },
     },
   },

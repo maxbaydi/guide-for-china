@@ -46,11 +46,17 @@
     "strokes": "Черты",
     "hskLevel": "HSK",
     "frequency": "Частота",
-    "definitions": "Определения",
+    "definitions": "Переводы",
     "examples": "Примеры",
+    "similarWords": "Похожие",
+    "reverseTranslations": "В русских словах",
     "addToCollection": "Добавить в коллекцию",
     "noExamples": "Примеры отсутствуют",
-    "noTranslation": "Нет перевода"
+    "noSimilarWords": "Похожие слова не найдены",
+    "noReverseTranslations": "Обратные переводы не найдены",
+    "noTranslation": "Нет перевода",
+    "startingWith": "Начинающиеся с",
+    "containing": "Содержащие"
   },
   "analyze": {
     "title": "Анализ текста",

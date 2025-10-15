@@ -214,5 +214,68 @@ export class DictionaryService {
       throw error;
     }
   }
+
+  async getSimilarWords(simplified: string, limit: number = 20) {
+    const graphqlQuery = `
+      query GetSimilarWords($simplified: String!, $limit: Int) {
+        getSimilarWords(simplified: $simplified, limit: $limit) {
+          id
+          simplified
+          pinyin
+          mainTranslation
+        }
+      }
+    `;
+
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post('graphql', {
+          query: graphqlQuery,
+          variables: { simplified, limit },
+        }),
+      );
+
+      if (data.errors) {
+        this.logger.error('Get similar words error:', data.errors);
+        throw new Error(data.errors[0].message);
+      }
+
+      return data.data.getSimilarWords;
+    } catch (error) {
+      this.logger.error('Get similar words failed:', error.message);
+      throw error;
+    }
+  }
+
+  async getReverseTranslations(simplified: string, limit: number = 20) {
+    const graphqlQuery = `
+      query GetReverseTranslations($simplified: String!, $limit: Int) {
+        getReverseTranslations(simplified: $simplified, limit: $limit) {
+          russian
+          chinese
+          pinyin
+        }
+      }
+    `;
+
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post('graphql', {
+          query: graphqlQuery,
+          variables: { simplified, limit },
+        }),
+      );
+
+      if (data.errors) {
+        this.logger.error('Get reverse translations error:', data.errors);
+        throw new Error(data.errors[0].message);
+      }
+
+      return data.data.getReverseTranslations;
+    } catch (error) {
+      this.logger.error('Get reverse translations failed:', error.message);
+      throw error;
+    }
+  }
 }
 
