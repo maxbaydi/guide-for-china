@@ -59,6 +59,64 @@ export class DictionaryController {
     }
   }
 
+  @Get('character/:id/similar')
+  async getSimilarWords(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+  ) {
+    try {
+      // Сначала получаем иероглиф чтобы узнать его simplified
+      const character = await this.dictionaryService.getCharacter(id);
+      if (!character) {
+        throw new HttpException(
+          'Character not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      
+      const limitNum = limit ? parseInt(limit, 10) : 20;
+      return await this.dictionaryService.getSimilarWords(
+        character.simplified,
+        limitNum,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to get similar words for ${id}: ${error.message}`);
+      throw new HttpException(
+        error.message || 'Failed to get similar words',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('character/:id/reverse')
+  async getReverseTranslations(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+  ) {
+    try {
+      // Сначала получаем иероглиф чтобы узнать его simplified
+      const character = await this.dictionaryService.getCharacter(id);
+      if (!character) {
+        throw new HttpException(
+          'Character not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      
+      const limitNum = limit ? parseInt(limit, 10) : 20;
+      return await this.dictionaryService.getReverseTranslations(
+        character.simplified,
+        limitNum,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to get reverse translations for ${id}: ${error.message}`);
+      throw new HttpException(
+        error.message || 'Failed to get reverse translations',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Get('character/:id')
   async getCharacter(@Param('id') id: string) {
     try {

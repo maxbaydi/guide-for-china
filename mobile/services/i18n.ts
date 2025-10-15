@@ -72,7 +72,7 @@ const initI18n = async () => {
         useSuspense: false,
       },
       
-      compatibilityJSON: 'v3', // Для совместимости с Expo
+      compatibilityJSON: 'v4', // Для совместимости с Expo
     });
 };
 

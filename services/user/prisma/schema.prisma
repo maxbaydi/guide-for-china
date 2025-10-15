@@ -46,7 +46,7 @@ model User {
   // Subscription
   subscriptionTier    SubscriptionTier @default(FREE)
   dailyRequestsUsed   Int              @default(0)
-  dailyRequestsLimit  Int              @default(50)
+  dailyRequestsLimit  Int              @default(150)
   lastRequestReset    DateTime         @default(now())
   
   // Statistics

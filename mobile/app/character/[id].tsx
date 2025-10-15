@@ -6,18 +6,21 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Text, IconButton, Card, ActivityIndicator, Button, Divider } from 'react-native-paper';
 import { api } from '../../services/api';
-import { Character } from '../../types/api.types';
+import { Character, SimilarWord, ReverseTranslation } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AddToCollectionModal } from '../../components/AddToCollectionModal';
+import { DefinitionGroup } from '../../components/character/DefinitionGroup';
+import { ExampleItem } from '../../components/character/ExampleItem';
 
 export default function CharacterDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('definitions');
+  const [activeTab, setActiveTab] = useState<'definitions' | 'examples' | 'similar' | 'reverse'>('definitions');
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Основные данные иероглифа
   const { data: character, isLoading } = useQuery<Character>({
     queryKey: ['character', id],
     queryFn: async () => {
@@ -27,6 +30,30 @@ export default function CharacterDetailScreen() {
       return data;
     },
     enabled: !!id,
+  });
+
+  // Похожие слова - загружаются только при открытии вкладки
+  const { data: similarWords } = useQuery<SimilarWord[]>({
+    queryKey: ['similar-words', character?.simplified],
+    queryFn: async () => {
+      const { data } = await api.get(`/dictionary/character/${id}/similar`, {
+        skipErrorToast: true,
+      } as any);
+      return data;
+    },
+    enabled: !!character?.simplified && activeTab === 'similar',
+  });
+
+  // Обратные переводы - загружаются только при открытии вкладки
+  const { data: reverseTranslations } = useQuery<ReverseTranslation[]>({
+    queryKey: ['reverse-translations', character?.simplified],
+    queryFn: async () => {
+      const { data } = await api.get(`/dictionary/character/${id}/reverse`, {
+        skipErrorToast: true,
+      } as any);
+      return data;
+    },
+    enabled: !!character?.simplified && activeTab === 'reverse',
   });
 
   const handleAddSuccess = (collectionName: string) => {
@@ -116,7 +143,7 @@ export default function CharacterDetailScreen() {
             >
               {t('character.definitions')}
             </Button>
-             <Button
+            <Button
               mode="text"
               onPress={() => setActiveTab('examples')}
               labelStyle={[styles.tabButton, activeTab === 'examples' && styles.activeTabText]}
@@ -124,48 +151,97 @@ export default function CharacterDetailScreen() {
             >
               {t('character.examples')}
             </Button>
+            <Button
+              mode="text"
+              onPress={() => setActiveTab('similar')}
+              labelStyle={[styles.tabButton, activeTab === 'similar' && styles.activeTabText]}
+              style={[styles.tab, activeTab === 'similar' && styles.activeTab]}
+            >
+              {t('character.similarWords')}
+            </Button>
+            <Button
+              mode="text"
+              onPress={() => setActiveTab('reverse')}
+              labelStyle={[styles.tabButton, activeTab === 'reverse' && styles.activeTabText]}
+              style={[styles.tab, activeTab === 'reverse' && styles.activeTab]}
+            >
+              {t('character.reverseTranslations')}
+            </Button>
           </View>
 
           <View style={styles.tabContent}>
             {activeTab === 'definitions' && (
-               <View style={styles.definitionsList}>
-                {character.definitions.map((def, idx) => (
-                  <View key={`def-${idx}`}>
-                    <View style={styles.definitionItemContainer}>
-                      <Text style={styles.definitionItem}>
-                        {def.partOfSpeech && (
-                          <Text style={styles.partOfSpeech}>({def.partOfSpeech}) </Text>
-                        )}
-                        <Text>{def.translation}</Text>
-                        {def.context && (
-                          <Text style={styles.definitionContext}> — {def.context}</Text>
-                        )}
-                      </Text>
-                    </View>
-                    {idx < character.definitions.length - 1 && (
-                      <Divider style={styles.divider} />
-                    )}
-                  </View>
-                ))}
+              <View style={styles.definitionsList}>
+                <DefinitionGroup definitions={character.definitions} />
               </View>
             )}
+            
             {activeTab === 'examples' && (
               <View style={styles.examplesList}>
                 {character.examples && character.examples.length > 0 ? (
-                    character.examples.map((ex, idx) => (
-                        <View key={`${ex.id}-${idx}`}>
-                          <View style={styles.exampleItem}>
-                              <Text style={styles.exampleChinese}>{ex.chinese}</Text>
-                              {ex.pinyin && <Text style={styles.examplePinyin}>{ex.pinyin}</Text>}
-                              <Text style={styles.exampleTranslation}>{ex.russian}</Text>
-                          </View>
-                          {idx < character.examples.length - 1 && (
-                            <Divider style={styles.divider} />
-                          )}
-                        </View>
-                    ))
+                  character.examples.map((ex, idx) => (
+                    <View key={`${ex.id}-${idx}`}>
+                      <ExampleItem 
+                        example={ex} 
+                        highlightCharacter={character.simplified}
+                      />
+                      {idx < (character.examples?.length ?? 0) - 1 && (
+                        <Divider style={styles.divider} />
+                      )}
+                    </View>
+                  ))
                 ) : (
-                    <Text style={styles.noExamplesText}>{t('character.noExamples')}</Text>
+                  <Text style={styles.noExamplesText}>{t('character.noExamples')}</Text>
+                )}
+              </View>
+            )}
+
+            {activeTab === 'similar' && (
+              <View style={styles.similarList}>
+                {similarWords && similarWords.length > 0 ? (
+                  similarWords.map((word, idx) => (
+                    <View key={`${word.id}-${idx}`}>
+                      <Card 
+                        style={styles.similarCard}
+                        onPress={() => router.push(`/character/${word.id}`)}
+                      >
+                        <Card.Content style={styles.similarContent}>
+                          <View style={styles.similarLeft}>
+                            <Text style={styles.similarChinese}>{word.simplified}</Text>
+                            <Text style={styles.similarPinyin}>{word.pinyin}</Text>
+                          </View>
+                          <Text style={styles.similarTranslation} numberOfLines={2}>
+                            {word.mainTranslation}
+                          </Text>
+                        </Card.Content>
+                      </Card>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.noExamplesText}>{t('character.noSimilarWords')}</Text>
+                )}
+              </View>
+            )}
+
+            {activeTab === 'reverse' && (
+              <View style={styles.reverseList}>
+                {reverseTranslations && reverseTranslations.length > 0 ? (
+                  reverseTranslations.map((trans, idx) => (
+                    <View key={`reverse-${idx}`}>
+                      <View style={styles.reverseItem}>
+                        <Text style={styles.reverseRussian}>{trans.russian}</Text>
+                        <Text style={styles.reverseChinese}>{trans.chinese}</Text>
+                        {trans.pinyin && (
+                          <Text style={styles.reversePinyin}>{trans.pinyin}</Text>
+                        )}
+                      </View>
+                      {idx < reverseTranslations.length - 1 && (
+                        <Divider style={styles.divider} />
+                      )}
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.noExamplesText}>{t('character.noReverseTranslations')}</Text>
                 )}
               </View>
             )}
@@ -275,49 +351,67 @@ const styles = StyleSheet.create({
   definitionsList: {
     gap: 0,
   },
-  definitionItemContainer: {
-    paddingVertical: 12,
-  },
-  definitionItem: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  partOfSpeech: {
-    fontStyle: 'italic',
-    color: Colors.secondary,
-    fontWeight: '500',
-  },
-  definitionContext: {
-    color: Colors.textLight,
-    fontStyle: 'italic',
-  },
   divider: {
     backgroundColor: Colors.border,
   },
   examplesList: {
     gap: 0,
   },
-  exampleItem: {
-    paddingVertical: 12,
-    gap: 8,
-  },
-  exampleChinese: {
-    fontFamily: 'Noto Serif SC',
-    fontSize: 18,
-    color: Colors.text,
-  },
-  examplePinyin: {
-    color: Colors.textLight,
-    fontSize: 14,
-  },
-  exampleTranslation: {
-    fontSize: 16,
-    color: Colors.text,
-    marginTop: 4,
-  },
   noExamplesText: {
     color: Colors.textLight,
     textAlign: 'center',
     padding: 16,
+  },
+  similarList: {
+    gap: 12,
+  },
+  similarCard: {
+    backgroundColor: Colors.white,
+    marginBottom: 8,
+  },
+  similarContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  similarLeft: {
+    gap: 4,
+  },
+  similarChinese: {
+    fontFamily: 'Noto Serif SC',
+    fontSize: 20,
+    color: Colors.text,
+    fontWeight: '600',
+  },
+  similarPinyin: {
+    fontSize: 14,
+    color: Colors.textLight,
+  },
+  similarTranslation: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.text,
+  },
+  reverseList: {
+    gap: 0,
+  },
+  reverseItem: {
+    paddingVertical: 12,
+    gap: 6,
+  },
+  reverseRussian: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  reverseChinese: {
+    fontFamily: 'Noto Serif SC',
+    fontSize: 18,
+    color: Colors.text,
+  },
+  reversePinyin: {
+    fontSize: 14,
+    color: Colors.textLight,
   },
 });

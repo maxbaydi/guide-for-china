@@ -11,6 +11,8 @@ export interface Character {
   frequency?: number;
   definitions: Definition[];
   examples?: Example[];
+  similarWords?: SimilarWord[];
+  reverseTranslations?: ReverseTranslation[];
   createdAt?: string;
 }
 
@@ -18,6 +20,7 @@ export interface Definition {
   id: string;
   translation: string;
   partOfSpeech?: string;
+  context?: string;
   order: number;
 }
 
@@ -26,6 +29,19 @@ export interface Example {
   chinese: string;
   pinyin?: string;
   russian: string;
+}
+
+export interface SimilarWord {
+  id: string;
+  simplified: string;
+  pinyin: string;
+  mainTranslation: string;
+}
+
+export interface ReverseTranslation {
+  russian: string;
+  chinese: string;
+  pinyin?: string;
 }
 
 export interface Phrase {

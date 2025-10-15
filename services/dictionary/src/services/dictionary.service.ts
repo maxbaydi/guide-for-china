@@ -269,6 +269,78 @@ export class DictionaryService {
   }
 
   /**
+   * Получить похожие слова
+   * Поиск слов начинающихся с данного иероглифа или содержащих его
+   */
+  async getSimilarWords(simplified: string, limit: number = 20): Promise<any[]> {
+    try {
+      // Поиск слов начинающихся с иероглифа или содержащих его
+      const similarChars = await this.prisma.character.findMany({
+        where: {
+          OR: [
+            { simplified: { startsWith: simplified } },
+            { simplified: { contains: simplified } },
+          ],
+          NOT: {
+            simplified: simplified, // Исключаем сам иероглиф
+          },
+        },
+        include: {
+          definitions: {
+            orderBy: { order: 'asc' },
+            take: 1, // Берем только первое определение для предпросмотра
+          },
+        },
+        take: limit,
+        orderBy: [
+          // Сначала слова начинающиеся с иероглифа
+          { simplified: 'asc' },
+        ],
+      });
+
+      // Преобразуем в формат с mainTranslation
+      return similarChars.map((char) => ({
+        id: char.id,
+        simplified: char.simplified,
+        pinyin: char.pinyin || '',
+        mainTranslation: char.definitions[0]?.translation || 'Нет перевода',
+      }));
+    } catch (error) {
+      this.logger.error(`Error fetching similar words for ${simplified}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Получить обратные переводы
+   * Поиск в таблице phrases, где встречается данный иероглиф
+   */
+  async getReverseTranslations(simplified: string, limit: number = 20): Promise<any[]> {
+    try {
+      const phrases = await this.prisma.phrase.findMany({
+        where: {
+          chinese: {
+            contains: simplified,
+          },
+        },
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return phrases.map((phrase) => ({
+        russian: phrase.russian,
+        chinese: phrase.chinese,
+        pinyin: phrase.pinyin,
+      }));
+    } catch (error) {
+      this.logger.error(`Error fetching reverse translations for ${simplified}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Получить слово дня
    * Использует дату как seed для детерминированного выбора
    */

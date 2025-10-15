@@ -10,7 +10,7 @@
     "reset": "expo start --clear"
   },
   "dependencies": {
-    "@apollo/client": "^3.11.10",
+    "@apollo/client": "^3.14.0",
     "@expo/metro-runtime": "^6.1.2",
     "@expo/vector-icons": "~15.0.0",
     "@hookform/resolvers": "^5.2.2",

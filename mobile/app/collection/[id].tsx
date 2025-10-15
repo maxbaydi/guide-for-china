@@ -113,11 +113,16 @@ export default function CollectionDetailScreen() {
           const characterData: CharacterType = {
             ...item.character,
             definitions: Array.isArray(item.character.definitions)
-              ? item.character.definitions.map((translation: string, index: number) => ({
-                  id: `${item.character.id}-def-${index}`,
-                  translation,
-                  order: index,
-                }))
+              ? item.character.definitions.map((def: any, index: number) => {
+                  if (typeof def === 'string') {
+                    return {
+                      id: `${item.character.id}-def-${index}`,
+                      translation: def,
+                      order: index,
+                    };
+                  }
+                  return def;
+                })
               : [],
           } as CharacterType;
 

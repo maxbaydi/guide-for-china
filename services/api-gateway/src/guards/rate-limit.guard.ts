@@ -39,7 +39,7 @@ export class RateLimitGuard implements CanActivate {
 
       // Лимиты в зависимости от тарифа
       const limits = {
-        FREE: { requests: 50, window: 86400 }, // 50 запросов в день
+        FREE: { requests: 150, window: 86400 }, // 150 запросов в день
         PREMIUM: { requests: 10000, window: 86400 }, // 10000 запросов в день
       };
 
