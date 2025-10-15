@@ -1,18 +1,51 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DictionaryService } from '../dictionary.service';
 import { PrismaService } from '../prisma.service';
+import { RedisService } from '../../redis/redis.service';
+import { SearchService } from '../search.service';
 
 describe('DictionaryService', () => {
   let service: DictionaryService;
   let prisma: PrismaService;
 
+  // Mock для RedisService
+  const mockRedisService = {
+    getCachedSearchResults: jest.fn(),
+    cacheSearchResults: jest.fn(),
+    getCachedCharacter: jest.fn(),
+    cacheCharacter: jest.fn(),
+    getCachedPhraseSearchResults: jest.fn(),
+    cachePhraseSearchResults: jest.fn(),
+    getCachedAnalysisResults: jest.fn(),
+    cacheAnalysisResults: jest.fn(),
+  };
+
+  // Mock для SearchService
+  const mockSearchService = {
+    searchWithStrategy: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DictionaryService, PrismaService],
+      providers: [
+        DictionaryService,
+        PrismaService,
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
+        {
+          provide: SearchService,
+          useValue: mockSearchService,
+        },
+      ],
     }).compile();
 
     service = module.get<DictionaryService>(DictionaryService);
     prisma = module.get<PrismaService>(PrismaService);
+
+    // Очищаем моки перед каждым тестом
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -21,8 +54,25 @@ describe('DictionaryService', () => {
 
   describe('searchCharacters', () => {
     it('должен найти иероглифы по запросу', async () => {
-      // Мокаем $queryRaw для unit теста
-      const mockCharacter = {
+      // Мокаем кеш - возвращаем null для cache miss
+      mockRedisService.getCachedSearchResults.mockResolvedValue(null);
+      
+      // Мокаем результаты поиска из SearchService
+      const mockSearchResult = {
+        id: '123',
+        simplified: '学',
+        traditional: '學',
+        pinyin: 'xué',
+        hsk_level: null,
+        frequency: null,
+        match_score: 1.0,
+        match_type: 'exact',
+      };
+      
+      mockSearchService.searchWithStrategy.mockResolvedValue([mockSearchResult]);
+      
+      // Мокаем полные данные иероглифа
+      jest.spyOn(prisma.character, 'findUnique').mockResolvedValue({
         id: '123',
         simplified: '学',
         traditional: '學',
@@ -30,11 +80,6 @@ describe('DictionaryService', () => {
         hskLevel: null,
         frequency: null,
         createdAt: new Date(),
-      };
-      
-      jest.spyOn(prisma, '$queryRaw').mockResolvedValue([mockCharacter]);
-      jest.spyOn(prisma.character, 'findUnique').mockResolvedValue({
-        ...mockCharacter,
         definitions: [],
         examples: [],
       } as any);
@@ -45,16 +90,20 @@ describe('DictionaryService', () => {
       expect(results.length).toBeGreaterThan(0);
       expect(results[0]).toHaveProperty('id');
       expect(results[0]).toHaveProperty('simplified');
+      expect(mockSearchService.searchWithStrategy).toHaveBeenCalledWith('学', 5);
     });
 
     it('должен ограничивать количество результатов', async () => {
-      const mockResults = [
-        { id: '1', simplified: '中' },
-        { id: '2', simplified: '中国' },
-        { id: '3', simplified: '中文' },
+      mockRedisService.getCachedSearchResults.mockResolvedValue(null);
+      
+      const mockSearchResults = [
+        { id: '1', simplified: '中', match_score: 1.0, match_type: 'exact' },
+        { id: '2', simplified: '中国', match_score: 0.8, match_type: 'prefix' },
+        { id: '3', simplified: '中文', match_score: 0.8, match_type: 'prefix' },
       ];
       
-      jest.spyOn(prisma, '$queryRaw').mockResolvedValue(mockResults);
+      mockSearchService.searchWithStrategy.mockResolvedValue(mockSearchResults);
+      
       jest.spyOn(prisma.character, 'findUnique').mockResolvedValue({
         id: '1',
         simplified: '中',
@@ -71,6 +120,7 @@ describe('DictionaryService', () => {
       const results = await service.searchCharacters('中', limit);
       
       expect(results.length).toBeLessThanOrEqual(limit);
+      expect(mockSearchService.searchWithStrategy).toHaveBeenCalledWith('中', limit);
     });
   });
 

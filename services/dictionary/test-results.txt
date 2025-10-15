@@ -1,0 +1,343 @@
+
+> @hanguide/dictionary-service@1.0.0 test
+> jest
+
+PASS src/scripts/__tests__/import-bkrs.spec.ts (18.811 s)
+PASS src/scripts/__tests__/analyze-bkrs.spec.ts (20.1 s)
+  ● Console
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.01 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: test.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+    console.log
+      
+      📚 Analyzing file: my-dictionary.dsl
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:31:11)
+
+    console.log
+      ⏳ Processing...
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:32:11)
+
+    console.log
+      
+      ✅ Analysis complete! (0.00 seconds)
+
+      at analyzeDslFile (scripts/analyze-bkrs.ts:78:13)
+
+PASS src/utils/__tests__/dsl-parser.spec.ts (28.243 s)
+PASS src/utils/__tests__/input-detector.spec.ts (34.413 s)
+[31m[Nest] 25356  - [39m10/15/2025, 6:40:15 PM [31m  ERROR[39m [38;5;3m[SearchService] [39m[31mSearch execution failed for query "test":[39m
+[31m[Nest] 25356  - [39m10/15/2025, 6:40:15 PM [31m  ERROR[39m [38;5;3m[SearchService] [39m[31mError: DB Error[39m
+[31m[Nest] 25356  - [39m10/15/2025, 6:40:15 PM [31m  ERROR[39m [38;5;3m[SearchService] [39m[31mDetailed search failed:[39m
+[31m[Nest] 25356  - [39m10/15/2025, 6:40:15 PM [31m  ERROR[39m [38;5;3m[SearchService] [39m[31mError: DB Error[39m
+PASS src/services/__tests__/search.service.spec.ts (34.628 s)
+FAIL src/services/__tests__/dictionary.service.spec.ts (37.384 s)
+  ● DictionaryService › searchPhrases › должен найти фразы по русскому запросу
+
+    TypeError: this.redisService.getCachedPhraseSearchResults is not a function
+
+      153 |   async searchPhrases(query: string, limit: number = 20): Promise<Phrase[]> {
+      154 |     // Проверяем кеш
+    > 155 |     const cached = await this.redisService.getCachedPhraseSearchResults(`${query}:${limit}`);
+          |                                            ^
+      156 |     if (cached) {
+      157 |       this.logger.log(`Cache hit for phrase search: ${query}`);
+      158 |       return cached;
+
+      at DictionaryService.searchPhrases (services/dictionary.service.ts:155:44)
+      at Object.<anonymous> (services/__tests__/dictionary.service.spec.ts:201:37)
+
+  ● DictionaryService › searchPhrases › должен найти фразы по китайскому запросу
+
+    TypeError: this.redisService.getCachedPhraseSearchResults is not a function
+
+      153 |   async searchPhrases(query: string, limit: number = 20): Promise<Phrase[]> {
+      154 |     // Проверяем кеш
+    > 155 |     const cached = await this.redisService.getCachedPhraseSearchResults(`${query}:${limit}`);
+          |                                            ^
+      156 |     if (cached) {
+      157 |       this.logger.log(`Cache hit for phrase search: ${query}`);
+      158 |       return cached;
+
+      at DictionaryService.searchPhrases (services/dictionary.service.ts:155:44)
+      at Object.<anonymous> (services/__tests__/dictionary.service.spec.ts:223:37)
+
+  ● DictionaryService › analyzeText › должен разобрать текст на иероглифы
+
+    TypeError: this.redisService.getCachedAnalysisResults is not a function
+
+      183 |   async analyzeText(text: string): Promise<CharacterAnalysis[]> {
+      184 |     // Проверяем кеш
+    > 185 |     const cached = await this.redisService.getCachedAnalysisResults(text);
+          |                                            ^
+      186 |     if (cached) {
+      187 |       this.logger.log(`Cache hit for text analysis: ${text.substring(0, 20)}...`);
+      188 |       return cached;
+
+      at DictionaryService.analyzeText (services/dictionary.service.ts:185:44)
+      at Object.<anonymous> (services/__tests__/dictionary.service.spec.ts:244:38)
+
+  ● DictionaryService › analyzeText › должен игнорировать не-китайские символы
+
+    TypeError: this.redisService.getCachedAnalysisResults is not a function
+
+      183 |   async analyzeText(text: string): Promise<CharacterAnalysis[]> {
+      184 |     // Проверяем кеш
+    > 185 |     const cached = await this.redisService.getCachedAnalysisResults(text);
+          |                                            ^
+      186 |     if (cached) {
+      187 |       this.logger.log(`Cache hit for text analysis: ${text.substring(0, 20)}...`);
+      188 |       return cached;
+
+      at DictionaryService.analyzeText (services/dictionary.service.ts:185:44)
+      at Object.<anonymous> (services/__tests__/dictionary.service.spec.ts:266:38)
+
+  ● DictionaryService › analyzeText › должен вернуть пустой массив для текста без иероглифов
+
+    TypeError: this.redisService.getCachedAnalysisResults is not a function
+
+      183 |   async analyzeText(text: string): Promise<CharacterAnalysis[]> {
+      184 |     // Проверяем кеш
+    > 185 |     const cached = await this.redisService.getCachedAnalysisResults(text);
+          |                                            ^
+      186 |     if (cached) {
+      187 |       this.logger.log(`Cache hit for text analysis: ${text.substring(0, 20)}...`);
+      188 |       return cached;
+
+      at DictionaryService.analyzeText (services/dictionary.service.ts:185:44)
+      at Object.<anonymous> (services/__tests__/dictionary.service.spec.ts:274:38)
+
+PASS src/utils/__tests__/text-normalizer.spec.ts (37.848 s)
+FAIL src/utils/__tests__/pg-jieba.spec.ts (41.676 s)
+  ● pg_jieba Full-Text Search › Chinese text search › should search by simplified Chinese
+
+    thrown: "Exceeded timeout of 5000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+       99 |     });
+      100 |
+    > 101 |     it('should search by simplified Chinese', async () => {
+          |     ^
+      102 |       const results = await prisma.$queryRaw<
+      103 |         Array<{ id: string; simplified: string; pinyin: string | null }>
+      104 |       >`
+
+      at utils/__tests__/pg-jieba.spec.ts:101:5
+      at utils/__tests__/pg-jieba.spec.ts:77:3
+      at Object.<anonymous> (utils/__tests__/pg-jieba.spec.ts:5:1)
+
+  ● pg_jieba Full-Text Search › Chinese text search › should search by pinyin
+
+    thrown: "Exceeded timeout of 5000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      112 |     });
+      113 |
+    > 114 |     it('should search by pinyin', async () => {
+          |     ^
+      115 |       // Search by pinyin requires the character to exist with pinyin
+      116 |       const results = await prisma.$queryRaw<
+      117 |         Array<{ id: string; simplified: string; pinyin: string | null }>
+
+      at utils/__tests__/pg-jieba.spec.ts:114:5
+      at utils/__tests__/pg-jieba.spec.ts:77:3
+      at Object.<anonymous> (utils/__tests__/pg-jieba.spec.ts:5:1)
+
+  ● pg_jieba Full-Text Search › Chinese text search › should return results ranked by relevance
+
+    thrown: "Exceeded timeout of 5000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      132 |     });
+      133 |
+    > 134 |     it('should return results ranked by relevance', async () => {
+          |     ^
+      135 |       const results = await prisma.$queryRaw<
+      136 |         Array<{ id: string; simplified: string; rank: number }>
+      137 |       >`
+
+      at utils/__tests__/pg-jieba.spec.ts:134:5
+      at utils/__tests__/pg-jieba.spec.ts:77:3
+      at Object.<anonymous> (utils/__tests__/pg-jieba.spec.ts:5:1)
+
+  ● pg_jieba Full-Text Search › Phrase search › should search phrases by Russian
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      189 |       expect(results.length).toBeGreaterThan(0);
+      190 |       const found = results.find((r) => r.russian === 'учиться');
+    > 191 |       expect(found).toBeDefined();
+          |                     ^
+      192 |       expect(found?.chinese).toBe('学习');
+      193 |     });
+      194 |
+
+      at Object.<anonymous> (utils/__tests__/pg-jieba.spec.ts:191:21)
+
+  ● pg_jieba Full-Text Search › Phrase search › should search phrases by Chinese
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      203 |       expect(results.length).toBeGreaterThan(0);
+      204 |       const found = results.find((r) => r.chinese === '有势力');
+    > 205 |       expect(found).toBeDefined();
+          |                     ^
+      206 |     });
+      207 |   });
+      208 |
+
+      at Object.<anonymous> (utils/__tests__/pg-jieba.spec.ts:205:21)
+
+PASS src/resolvers/__tests__/dictionary.resolver.spec.ts (48.702 s)
+
+Test Suites: 2 failed, 7 passed, 9 total
+Tests:       10 failed, 135 passed, 145 total
+Snapshots:   0 total
+Time:        51.947 s, estimated 71 s
+Ran all test suites.
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /mnt/c/Users/jerem/OneDrive/Документы/guide-for-china/services/dictionary
+npm error workspace @hanguide/dictionary-service@1.0.0
+npm error location /mnt/c/Users/jerem/OneDrive/Документы/guide-for-china/services/dictionary
+npm error command failed
+npm error command sh -c jest

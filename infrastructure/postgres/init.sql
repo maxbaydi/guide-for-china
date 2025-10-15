@@ -13,9 +13,59 @@
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "unaccent"; -- Для нормализации пиньиня
 
 -- Grant necessary permissions
 GRANT ALL PRIVILEGES ON DATABASE chinese_guide TO postgres;
+
+-- ============================================
+-- Функция нормализации пиньиня
+-- ============================================
+-- Убирает тоны и приводит к lowercase для корректного поиска
+-- Используется в функциях поиска
+
+CREATE OR REPLACE FUNCTION normalize_pinyin(input_text text)
+RETURNS text
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+  IF input_text IS NULL OR input_text = '' THEN
+    RETURN '';
+  END IF;
+  
+  RETURN LOWER(
+    -- Используем unaccent для удаления диакритических знаков
+    TRIM(
+      REGEXP_REPLACE(
+        unaccent(
+          -- Замена ü на v ПЕРЕД unaccent
+          REPLACE(
+            REPLACE(
+              REPLACE(
+                REPLACE(
+                  REPLACE(input_text, 'ü', 'v'),
+                  'ǖ', 'v'
+                ),
+                'ǘ', 'v'
+              ),
+              'ǚ', 'v'
+            ),
+            'ǜ', 'v'
+          )
+        ),
+        '[0-9]', -- Удаляем числовые обозначения тонов (1-5)
+        '',
+        'g'
+      )
+    )
+  );
+END;
+$$;
+
+COMMENT ON FUNCTION normalize_pinyin IS 
+'Нормализует пиньинь для поиска: убирает тоны, приводит к lowercase.
+Примеры: "xué" → "xue", "shànghǎi" → "shanghai", "nǐhǎo" → "nihao"';
 
 -- Note: pg_jieba extension will be created in migrations after Dictionary Service setup
 

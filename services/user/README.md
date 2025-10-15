@@ -205,9 +205,9 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chinese_guide"
 
 # JWT Configuration
 JWT_SECRET="your-super-secret-jwt-key"
-JWT_EXPIRES_IN="15m"
+JWT_EXPIRES_IN="2h"
 JWT_REFRESH_SECRET="your-super-secret-refresh-key"
-JWT_REFRESH_EXPIRES_IN="7d"
+JWT_REFRESH_EXPIRES_IN="30d"
 
 # Service
 PORT=4002
@@ -218,11 +218,12 @@ CORS_ORIGIN="*"
 ## Безопасность
 
 - Пароли хешируются с помощью bcrypt (10 раундов)
-- Access токены живут 15 минут
-- Refresh токены живут 7 дней и хранятся в базе данных
+- Access токены живут 2 часа
+- Refresh токены живут 30 дней и хранятся в базе данных
 - JWT подписываются секретными ключами
 - Все защищенные эндпоинты требуют валидный JWT токен
 - Поддержка деактивации аккаунтов
+- Автоматическое обновление токенов при истечении (реализовано в мобильном приложении)
 
 ## База данных
 

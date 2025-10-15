@@ -221,6 +221,66 @@ model Phrase {
 }
 
 // ===========================================
+// SQL ФУНКЦИИ И РАСШИРЕНИЯ
+// ===========================================
+
+// ВАЖНО: Эти SQL функции должны быть созданы в init.sql или миграциях
+// Они не могут быть определены в Prisma схеме, но критически важны для работы
+
+/*
+-- Расширения PostgreSQL (в init.sql):
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "unaccent";
+CREATE EXTENSION IF NOT EXISTS "pg_jieba";
+
+-- Функция нормализации пиньиня (в init.sql):
+CREATE OR REPLACE FUNCTION normalize_pinyin(input_text text)
+RETURNS text
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+  IF input_text IS NULL OR input_text = '' THEN
+    RETURN '';
+  END IF;
+  
+  RETURN LOWER(
+    TRIM(
+      REGEXP_REPLACE(
+        unaccent(
+          REPLACE(
+            REPLACE(
+              REPLACE(
+                REPLACE(
+                  REPLACE(input_text, 'ü', 'v'),
+                  'ǖ', 'v'
+                ),
+                'ǘ', 'v'
+              ),
+              'ǚ', 'v'
+            ),
+            'ǜ', 'v'
+          )
+        ),
+        '[0-9]',
+        '',
+        'g'
+      )
+    )
+  );
+END;
+$$;
+
+-- Функции поиска (в миграции 007_enhanced_search.sql):
+-- search_exact(), search_prefix(), search_fuzzy(), search_enhanced()
+
+-- Индексы производительности (в миграциях):
+-- GIN индексы для pg_trgm, полнотекстового поиска
+-- Композитные индексы для оптимизации запросов
+*/
+
+// ===========================================
 // КОММЕНТАРИИ К СТРУКТУРЕ БД
 // ===========================================
 
@@ -249,4 +309,10 @@ model Phrase {
 // - Dictionary Service: Character, Definition, Example, Phrase
 // - User Service: User, RefreshToken, Collection, CollectionItem
 // - Общая база данных с логическим разделением
+
+// КРИТИЧЕСКИ ВАЖНО ДЛЯ ДЕПЛОЯ:
+// 1. init.sql должен содержать все расширения и функцию normalize_pinyin()
+// 2. Миграция 007_enhanced_search.sql должна содержать все функции поиска
+// 3. Все индексы производительности должны быть созданы
+// 4. Без этих компонентов поиск по пиньинь НЕ БУДЕТ РАБОТАТЬ!
 
