@@ -1,40 +1,46 @@
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing } from '../../constants/Colors';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { Platform, View, StyleSheet } from 'react-native';
 
 /**
  * Layout для основных табов приложения
- * С индикатором активной вкладки
+ * С улучшенным дизайном и поддержкой темной темы
  */
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primaryDark, // cyan-600
-        tabBarInactiveTintColor: Colors.textLight, // gray-500
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 96 : 76,
-          paddingBottom: Platform.OS === 'ios' ? 32 : 16,
-          paddingTop: 8,
-          elevation: 0,
-          shadowOpacity: 0,
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+          borderTopWidth: 0.5,
+          height: Platform.OS === 'ios' ? 88 : 72,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+          paddingTop: Spacing.md,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
-          marginBottom: Platform.OS === 'ios' ? 4 : 2,
+          marginTop: Spacing.xs,
+          marginBottom: Platform.OS === 'ios' ? Spacing.xs : 0,
+          letterSpacing: 0.3,
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: Spacing.xs,
         },
       }}
     >

@@ -1,6 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { useTheme } from '../../contexts/ThemeContext';
+import { BorderRadius, Spacing } from '../../constants/Colors';
 
 interface ChipProps {
   children: React.ReactNode;
@@ -8,40 +10,58 @@ interface ChipProps {
   selected?: boolean;
 }
 
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
 export const Chip: React.FC<ChipProps> = ({
   children,
   onPress,
   selected = false,
 }) => {
+  const { theme } = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+  };
+
   return (
-    <TouchableOpacity
+    <AnimatedTouchable
       onPress={onPress}
-      activeOpacity={0.8}
-      style={[styles.chip, selected && styles.selectedChip]}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={0.9}
+      style={[
+        {
+          backgroundColor: selected ? theme.primary : theme.borderLight,
+          paddingVertical: Spacing.sm,
+          paddingHorizontal: Spacing.lg,
+          borderRadius: BorderRadius.full,
+        },
+        animatedStyle,
+      ]}
     >
-      <Text style={[styles.text, selected && styles.selectedText]}>
+      <Text style={[
+        styles.text,
+        { color: selected ? theme.textInverse : theme.text }
+      ]}>
         {children}
       </Text>
-    </TouchableOpacity>
+    </AnimatedTouchable>
   );
 };
 
 const styles = StyleSheet.create({
-  chip: {
-    backgroundColor: Colors.borderLight, // gray-100
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-  },
-  selectedChip: {
-    backgroundColor: Colors.primary, // cyan-500
-  },
   text: {
-    color: Colors.text, // gray-800
     fontWeight: '600',
     fontSize: 14,
-  },
-  selectedText: {
-    color: Colors.white,
+    letterSpacing: 0.2,
   },
 });

@@ -1,9 +1,11 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { BorderRadius, Spacing } from '../../constants/Colors';
 
-type CardVariant = 'standard' | 'gradient';
+type CardVariant = 'standard' | 'gradient' | 'elevated';
 
 interface CardProps {
   children: React.ReactNode;
@@ -12,12 +14,33 @@ interface CardProps {
   variant?: CardVariant;
 }
 
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
 export const Card: React.FC<CardProps> = ({ 
   children, 
   onPress, 
   style,
   variant = 'standard',
 }) => {
+  const { theme, shadows } = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (onPress) {
+      scale.value = withSpring(0.98, { damping: 20, stiffness: 300 });
+    }
+  };
+
+  const handlePressOut = () => {
+    if (onPress) {
+      scale.value = withSpring(1, { damping: 20, stiffness: 300 });
+    }
+  };
+
   const content = (
     <View style={[styles.content]}>
       {children}
@@ -27,10 +50,18 @@ export const Card: React.FC<CardProps> = ({
   if (variant === 'gradient') {
     const gradientCard = (
       <LinearGradient
-        colors={[Colors.primary, Colors.blue]} // cyan-500 to blue-600
+        colors={[theme.primary, theme.blue]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.card, styles.gradientCard, style]}
+        style={[
+          styles.card,
+          {
+            borderRadius: BorderRadius.xl,
+            padding: Spacing.xl,
+            ...shadows.large,
+          },
+          style
+        ]}
       >
         {content}
       </LinearGradient>
@@ -38,26 +69,50 @@ export const Card: React.FC<CardProps> = ({
 
     if (onPress) {
       return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+        <AnimatedTouchable 
+          onPress={onPress} 
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={0.9}
+          style={animatedStyle}
+        >
           {gradientCard}
-        </TouchableOpacity>
+        </AnimatedTouchable>
       );
     }
     return gradientCard;
   }
 
-  // Standard card
+  // Standard or elevated card
+  const cardStyle = [
+    styles.card,
+    {
+      backgroundColor: theme.surface,
+      borderRadius: BorderRadius.xl,
+      borderWidth: variant === 'standard' ? 1 : 0,
+      borderColor: theme.border,
+      ...(variant === 'elevated' ? shadows.medium : shadows.small),
+    },
+    style,
+  ];
+
   const standardCard = (
-    <View style={[styles.card, styles.standardCard, style]}>
+    <View style={cardStyle}>
       {content}
     </View>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <AnimatedTouchable 
+        onPress={onPress} 
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.9}
+        style={animatedStyle}
+      >
         {standardCard}
-      </TouchableOpacity>
+      </AnimatedTouchable>
     );
   }
 
@@ -66,29 +121,10 @@ export const Card: React.FC<CardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
     overflow: 'hidden',
   },
-  standardCard: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  gradientCard: {
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
   content: {
-    padding: 16,
+    padding: Spacing.lg,
   },
 });
 

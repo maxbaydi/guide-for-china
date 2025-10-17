@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { TextInput as RNTextInput, View, StyleSheet, Text } from 'react-native';
+import { TextInput as RNTextInput, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { BorderRadius, Spacing } from '../../constants/Colors';
 
 interface TextInputProps {
   value: string;
@@ -23,6 +25,8 @@ interface TextInputProps {
   style?: any;
 }
 
+const AnimatedView = Animated.createAnimatedComponent(View);
+
 export const TextInput: React.FC<TextInputProps> = ({
   value,
   onChangeText,
@@ -42,40 +46,75 @@ export const TextInput: React.FC<TextInputProps> = ({
   editable = true,
   style,
 }) => {
+  const { theme, shadows } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
-  
-  const containerStyle = [
-    styles.container,
-    isFocused && styles.containerFocused,
-    error && styles.containerError,
-    !editable && styles.containerDisabled,
-    style,
-  ];
+  const borderWidth = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    borderWidth: borderWidth.value,
+  }));
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    borderWidth.value = withTiming(2, { duration: 200 });
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    borderWidth.value = withTiming(1, { duration: 200 });
+  };
+
+  const getBorderColor = () => {
+    if (error) return theme.error;
+    if (isFocused) return theme.primary;
+    return theme.border;
+  };
 
   return (
     <View style={styles.wrapper}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={containerStyle}>
+      {label && (
+        <Text style={[styles.label, { color: theme.text }]}>
+          {label}
+        </Text>
+      )}
+      <AnimatedView
+        style={[
+          {
+            flexDirection: 'row',
+            alignItems: multiline ? 'flex-start' : 'center',
+            backgroundColor: theme.surface,
+            borderRadius: BorderRadius.lg,
+            borderColor: getBorderColor(),
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+            ...shadows.small,
+          },
+          animatedStyle,
+          !editable && { opacity: 0.6 },
+          style,
+        ]}
+      >
         {leftIcon && (
           <MaterialCommunityIcons
             name={leftIcon}
             size={20}
-            color={error ? Colors.error : Colors.textLight}
-            style={styles.leftIcon}
+            color={error ? theme.error : theme.textSecondary}
+            style={[styles.leftIcon, multiline && { marginTop: 2 }]}
           />
         )}
         <RNTextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={Colors.textLight}
+          placeholderTextColor={theme.textSecondary}
           multiline={multiline}
           secureTextEntry={secureTextEntry}
           onSubmitEditing={onSubmitEditing}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           style={[
             styles.input,
+            { color: theme.text },
             multiline && styles.inputMultiline,
           ]}
           maxLength={maxLength}
@@ -85,17 +124,23 @@ export const TextInput: React.FC<TextInputProps> = ({
           returnKeyType={multiline ? 'default' : 'done'}
         />
         {rightIcon && (
-          <MaterialCommunityIcons
-            name={rightIcon}
-            size={20}
-            color={error ? Colors.error : Colors.textLight}
-            style={styles.rightIcon}
+          <TouchableOpacity 
             onPress={onRightIconPress}
-          />
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons
+              name={rightIcon}
+              size={20}
+              color={error ? theme.error : theme.textSecondary}
+              style={[styles.rightIcon, multiline && { marginTop: 2 }]}
+            />
+          </TouchableOpacity>
         )}
-      </View>
+      </AnimatedView>
       {error && errorMessage && (
-        <Text style={styles.errorText}>{errorMessage}</Text>
+        <Text style={[styles.errorText, { color: theme.error }]}>
+          {errorMessage}
+        </Text>
       )}
     </View>
   );
@@ -103,45 +148,23 @@ export const TextInput: React.FC<TextInputProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 16, // px-4
-    paddingVertical: 12, // py-3
-  },
-  containerFocused: {
-    borderWidth: 2,
-    borderColor: Colors.primary, // cyan-500
-  },
-  containerError: {
-    borderColor: Colors.error,
-  },
-  containerDisabled: {
-    backgroundColor: Colors.backgroundLight,
-    opacity: 0.6,
+    marginBottom: Spacing.sm,
+    letterSpacing: 0.2,
   },
   leftIcon: {
-    marginRight: 8,
+    marginRight: Spacing.sm,
   },
   rightIcon: {
-    marginLeft: 8,
+    marginLeft: Spacing.sm,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: Colors.text,
     padding: 0,
   },
   inputMultiline: {
@@ -150,7 +173,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: Colors.error,
-    marginTop: 4,
+    marginTop: Spacing.xs,
+    marginLeft: Spacing.xs,
   },
 });

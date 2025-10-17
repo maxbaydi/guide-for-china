@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Chip } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
 import { Card } from './Card';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing } from '../../constants/Colors';
 import { Character } from '../../types/api.types';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface CharacterCardProps {
   character: Character;
@@ -15,28 +15,28 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   character,
   onPress,
 }) => {
+  const { theme } = useTheme();
+  
   return (
-    <Card onPress={onPress}>
+    <Card onPress={onPress} variant="elevated">
       <View style={styles.container}>
-        <View style={styles.characterContent}>
-          <Text style={styles.character}>{character.simplified}</Text>
-          <View style={styles.textContainer}>
-            <Text style={styles.pinyin} variant="bodyMedium">
-              {character.pinyin}
-            </Text>
-            {character.definitions && character.definitions.length > 0 && (
-              <Text
-                style={styles.translation}
-                variant="bodyMedium"
-                numberOfLines={1}
-              >
-                {character.definitions[0]?.translation || ''}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.textLight} />
+        <Text style={[styles.character, { color: theme.text }]}>
+          {character.simplified}
+        </Text>
+        {character.pinyin && (
+          <Text style={[styles.pinyin, { color: theme.text }]} variant="bodyMedium">
+            {character.pinyin}
+          </Text>
+        )}
+        {character.definitions && character.definitions.length > 0 && (
+          <Text
+            style={[styles.translation, { color: theme.textSecondary }]}
+            variant="bodyMedium"
+            numberOfLines={2}
+          >
+            {character.definitions[0]?.translation || ''}
+          </Text>
+        )}
       </View>
     </Card>
   );
@@ -44,34 +44,27 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-  },
-  characterContent: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
   },
   character: {
-    fontSize: 48,
+    fontSize: 44,
     fontFamily: 'Noto Serif SC',
-    color: Colors.text,
-  },
-  textContainer: {
-    alignItems: 'center',
-    gap: 4,
-    width: '100%',
+    fontWeight: '700',
+    letterSpacing: 1,
+    textAlign: 'center',
   },
   pinyin: {
     fontWeight: '600',
-    color: Colors.text,
+    fontSize: 15,
+    letterSpacing: 0.5,
     textAlign: 'center',
   },
   translation: {
-    color: Colors.textLight,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: 'center',
   },
 });

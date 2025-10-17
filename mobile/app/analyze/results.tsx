@@ -2,22 +2,25 @@ import { useState } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Text, Card, IconButton } from 'react-native-paper';
-import { CharacterAnalysis } from '../../types/api.types';
-import { Colors } from '../../constants/Colors';
+import { Text, Card } from 'react-native-paper';
+import { CharacterAnalysis, Character } from '../../types/api.types';
+import { useTheme } from '../../contexts/ThemeContext';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { CharacterCard } from '../../components/ui/CharacterCard';
+import { IconButton } from '../../components/ui/IconButton';
 import { AddToCollectionModal } from '../../components/AddToCollectionModal';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Helper to assign colors to characters
-const getCharColor = (index: number) => {
-    const colors = [Colors.primary, Colors.secondary, '#3B82F6', '#8B5CF6', '#F59E0B'];
+const getCharColor = (index: number, theme: any) => {
+    const colors = [theme.primary, theme.secondary, '#3B82F6', '#8B5CF6', '#F59E0B'];
     return colors[index % colors.length];
 };
 
 export default function AnalyzeResultsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { theme } = useTheme();
   const { results, originalText } = useLocalSearchParams<{ 
     results: string;
     originalText?: string;
@@ -69,6 +72,10 @@ export default function AnalyzeResultsScreen() {
         options={{
           title: t('analyze.results'),
           headerShown: true,
+          headerStyle: {
+            backgroundColor: theme.surface,
+          },
+          headerTintColor: theme.text,
           headerRight: () => originalText ? (
             <IconButton
               icon="pencil"
@@ -79,14 +86,14 @@ export default function AnalyzeResultsScreen() {
         }}
       />
       <ScrollView 
-        style={styles.container} 
+        style={[styles.container, { backgroundColor: theme.background }]} 
         contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
       >
-        <Text style={styles.statsText}>
+        <Text style={[styles.statsText, { color: theme.textSecondary }]}>
           {t('analyze.charactersFound', { count: analysisData.length })}
         </Text>
         
-        <Card style={styles.textCard}>
+        <Card variant="elevated" style={styles.textCard}>
           <Card.Content>
             <Text style={styles.originalText}>
               {analysisData.map((item, index) => (
@@ -94,7 +101,7 @@ export default function AnalyzeResultsScreen() {
                   key={`char-${index}-${item.character}`}
                   style={[
                     styles.characterSpan,
-                    { color: item.details ? getCharColor(index) : Colors.textLight }
+                    { color: item.details ? getCharColor(index, theme) : theme.textTertiary }
                   ]}
                   onPress={() => {
                     if (item.details?.id) {
@@ -112,36 +119,30 @@ export default function AnalyzeResultsScreen() {
         <View style={styles.charactersList}>
           {analysisData
             .filter((item) => item.details) // Показываем только иероглифы с данными
-            .map((item, index) => (
-            <Card
-              key={`card-${index}-${item.details?.id || item.character}`}
-              style={styles.characterCard}
-              onPress={() => {
-                if (item.details?.id) {
-                  router.push(`/character/${item.details.id}`);
-                }
-              }}
-            >
-              <Card.Content>
-                <View style={styles.characterCardHeader}>
-                  <Text style={[styles.characterLarge, { color: getCharColor(index) }]}>
-                    {item.character}
-                  </Text>
-                  <View style={styles.characterInfo}>
-                    <Text style={styles.pinyin}>{item.details?.pinyin || ''}</Text>
-                    <Text style={styles.translation} numberOfLines={2}>
-                      {item.details?.definitions?.[0]?.translation || ''}
-                    </Text>
-                  </View>
-                  <IconButton
-                    icon="bookmark-plus-outline"
-                    size={20}
-                    onPress={() => handleAddToCollection(item.details?.id)}
-                  />
-                </View>
-              </Card.Content>
-            </Card>
-          ))}
+            .map((item, index) => {
+              // Преобразуем CharacterAnalysis в Character для CharacterCard
+              const character: Character = {
+                id: item.details?.id || '',
+                simplified: item.character,
+                pinyin: item.details?.pinyin || '',
+                definitions: item.details?.definitions || [],
+                examples: item.details?.examples || [],
+                hskLevel: item.details?.hskLevel,
+                frequency: item.details?.frequency,
+              };
+              
+              return (
+                <CharacterCard
+                  key={`card-${index}-${item.details?.id || item.character}`}
+                  character={character}
+                  onPress={() => {
+                    if (item.details?.id) {
+                      router.push(`/character/${item.details.id}`);
+                    }
+                  }}
+                />
+              );
+            })}
         </View>
       </ScrollView>
       
@@ -160,7 +161,6 @@ export default function AnalyzeResultsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
     padding: 24,
@@ -168,47 +168,22 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   statsText: {
-    color: Colors.textLight,
     fontSize: 14,
     fontWeight: '600',
   },
   textCard: {
-     backgroundColor: Colors.white,
+    borderRadius: 16,
   },
   originalText: {
-    lineHeight: 32,
+    lineHeight: 40,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   characterSpan: {
     fontFamily: 'Noto Serif SC',
-    fontSize: 18,
+    fontSize: 32,
   },
   charactersList: {
     gap: 12,
-  },
-  characterCard: {
-    backgroundColor: Colors.white,
-  },
-  characterCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  characterLarge: {
-    fontSize: 40,
-    fontFamily: 'Noto Serif SC',
-    flexShrink: 0,
-  },
-  characterInfo: {
-    flex: 1,
-  },
-  pinyin: {
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  translation: {
-    color: Colors.textLight,
-    flexWrap: 'wrap',
   },
 });

@@ -4,7 +4,8 @@ import { useRouter, Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Text, HelperText } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../../constants/Colors';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
   const router = useRouter();
+  const { theme, shadows } = useTheme();
 
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -53,36 +55,54 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardContainer}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>汉</Text>
+            <View style={[styles.logo, { backgroundColor: theme.primary, ...shadows.large }]}>
+              <Text style={[styles.logoText, { color: theme.textInverse }]}>汉</Text>
             </View>
-            <Text variant="headlineLarge" style={styles.title}>
+            <Text variant="headlineLarge" style={[styles.title, { color: theme.text }]}>
               HanGuide
             </Text>
-            <Text variant="bodyLarge" style={styles.subtitle}>
+            <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.textSecondary }]}>
               {t('app.description')}
             </Text>
           </View>
           
           <View style={styles.languageButtons}>
             <TouchableOpacity 
-              style={[styles.langButton, i18n.language === 'ru' && styles.langButtonActive]}
+              style={[
+                styles.langButton, 
+                { 
+                  borderColor: theme.border,
+                  backgroundColor: i18n.language === 'ru' ? theme.primary : theme.surface 
+                }
+              ]}
               onPress={() => handleLanguageChange('ru')}
             >
-              <Text style={[styles.langButtonText, i18n.language === 'ru' && styles.langButtonTextActive]}>RU</Text>
+              <Text style={[
+                styles.langButtonText, 
+                { color: i18n.language === 'ru' ? theme.textInverse : theme.text }
+              ]}>RU</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.langButton, i18n.language === 'zh' && styles.langButtonActive]}
+              style={[
+                styles.langButton, 
+                { 
+                  borderColor: theme.border,
+                  backgroundColor: i18n.language === 'zh' ? theme.primary : theme.surface 
+                }
+              ]}
               onPress={() => handleLanguageChange('zh')}
             >
-              <Text style={[styles.langButtonText, i18n.language === 'zh' && styles.langButtonTextActive]}>中</Text>
+              <Text style={[
+                styles.langButtonText, 
+                { color: i18n.language === 'zh' ? theme.textInverse : theme.text }
+              ]}>中</Text>
             </TouchableOpacity>
           </View>
           
@@ -137,9 +157,9 @@ export default function LoginScreen() {
           
           <View style={styles.footer}>
             <Link href="/(auth)/register" asChild>
-              <Text variant="bodyLarge">
+              <Text variant="bodyLarge" style={{ color: theme.text }}>
                 {t('auth.dontHaveAccount')}{' '}
-                <Text style={styles.link}>{t('auth.registerButton')}</Text>
+                <Text style={[styles.link, { color: theme.primary }]}>{t('auth.registerButton')}</Text>
               </Text>
             </Link>
           </View>
@@ -152,7 +172,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   keyboardContainer: {
     flex: 1,
@@ -160,73 +179,59 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
-    gap: 16,
+    padding: Spacing.xl,
+    gap: Spacing.lg,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 16,
-    gap: 16,
+    marginBottom: Spacing.xl,
+    gap: Spacing.lg,
   },
   logo: {
-    width: 80,
-    height: 80,
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
+    width: 96,
+    height: 96,
+    borderRadius: BorderRadius.xxl,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: {
-    fontSize: 48,
+    fontSize: 56,
     fontFamily: 'Noto Serif SC',
-    color: Colors.white,
+    letterSpacing: 2,
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: Colors.textLight,
     textAlign: 'center',
+    lineHeight: 22,
   },
   button: {
-    marginTop: 8,
-  },
-  buttonLabel: {
-      paddingVertical: 8,
-      fontWeight: 'bold',
+    marginTop: Spacing.sm,
   },
   footer: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: Spacing.xl,
   },
   link: {
-    color: Colors.primary,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   languageButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 24,
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   langButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
-  },
-  langButtonActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
   },
   langButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
-  },
-  langButtonTextActive: {
-    color: Colors.white,
+    letterSpacing: 0.5,
   },
 });

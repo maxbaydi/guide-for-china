@@ -180,7 +180,12 @@
     "russian": "Русский",
     "chinese": "中文",
     "usernameHelperText": "Только буквы, цифры и подчеркивания (3-50 символов)",
-    "wordOfTheDayDescription": "Показывать слово дня на главном экране"
+    "wordOfTheDayDescription": "Показывать слово дня на главном экране",
+    "theme": "Тема приложения",
+    "themeDescription": "Выберите светлую, темную или системную тему",
+    "themeLight": "Светлая",
+    "themeDark": "Темная",
+    "themeSystem": "Авто"
   }
 }
 

@@ -11,7 +11,8 @@ import { api } from '../services/api';
 import { Character } from '../types/api.types';
 import { CharacterCard } from '../components/ui/CharacterCard';
 import { EmptyState } from '../components/ui/EmptyState';
-import { Colors } from '../constants/Colors';
+import { useTheme } from '../contexts/ThemeContext';
+import { Spacing } from '../constants/Colors';
 
 const SEARCH_HISTORY_LIMIT = 5;
 
@@ -20,6 +21,7 @@ export default function SearchResultsScreen() {
   const router = useRouter();
   const { query } = useLocalSearchParams<{ query: string }>();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
 
   const {
     data: searchResults,
@@ -64,7 +66,7 @@ export default function SearchResultsScreen() {
   };
   
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -81,11 +83,11 @@ export default function SearchResultsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={Colors.primary}
+            tintColor={theme.primary}
           />
         }
         ListHeaderComponent={
-          <Text style={styles.resultsText}>
+          <Text style={[styles.resultsText, { color: theme.textSecondary }]}>
             {t('search.resultsFor', { count: searchResults?.length || 0, query: query })}
           </Text>
         }
@@ -93,7 +95,7 @@ export default function SearchResultsScreen() {
           isLoading ? (
              <View style={styles.centered}>
                 <ActivityIndicator size="large" />
-                <Text>{t('search.loading')}</Text>
+                <Text style={{ color: theme.text }}>{t('search.loading')}</Text>
              </View>
           ) : (
             <EmptyState
@@ -117,24 +119,23 @@ export default function SearchResultsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   listContent: {
-    padding: 24,
-    // paddingTop убран - используется insets.top + 24
-    gap: 8,
+    padding: Spacing.xl,
+    gap: Spacing.md,
     paddingBottom: 120,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
     paddingTop: '30%',
   },
   resultsText: {
-    color: Colors.textLight,
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
+    fontSize: 15,
+    letterSpacing: 0.2,
   }
 });
