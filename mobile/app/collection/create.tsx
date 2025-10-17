@@ -7,7 +7,7 @@ import { Text, HelperText } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
 import { TextInput } from '../../components/ui/TextInput';
 import { CustomButton } from '../../components/ui/Button';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +32,7 @@ type FormData = z.infer<typeof schema>;
 export default function CreateCollectionScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   const [createCollection, { loading }] = useMutation(CREATE_COLLECTION, {
@@ -52,8 +53,17 @@ export default function CreateCollectionScreen() {
   };
   
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <Stack.Screen options={{ title: t('collections.createNew'), headerShown: true }} />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom', 'left', 'right']}>
+      <Stack.Screen 
+        options={{ 
+          title: t('collections.createNew'), 
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: theme.surface,
+          },
+          headerTintColor: theme.text,
+        }} 
+      />
       <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <Text variant="headlineLarge" style={styles.title}>{t('collections.newCollection')}</Text>
       </View>
@@ -112,7 +122,6 @@ export default function CreateCollectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     padding: 24,
     gap: 16,
   },

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { TextInput, View, StyleSheet } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { BorderRadius, Spacing } from '../../constants/Colors';
 
 interface SearchBarProps {
   value: string;
@@ -11,6 +13,9 @@ interface SearchBarProps {
   onSubmitEditing?: () => void;
 }
 
+const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedIcon = Animated.createAnimatedComponent(MaterialCommunityIcons);
+
 export const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChangeText,
@@ -18,60 +23,77 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onSubmitEditing,
 }) => {
   const { t } = useTranslation();
+  const { theme, shadows } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
+  
+  const iconScale = useSharedValue(1);
+  const borderWidth = useSharedValue(1);
   
   const placeholderText = placeholder || t('search.searchPlaceholder');
 
+  const iconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: iconScale.value }],
+  }));
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    iconScale.value = withSpring(1.15, { damping: 15, stiffness: 300 });
+    borderWidth.value = withTiming(2);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    iconScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+    borderWidth.value = withTiming(1);
+  };
+
   return (
-    <View
+    <AnimatedView
       style={[
-        styles.container,
-        isFocused && styles.containerFocused,
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: theme.surface,
+          borderRadius: BorderRadius.lg,
+          borderWidth: isFocused ? 2 : 1,
+          borderColor: isFocused ? theme.primary : theme.border,
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.md + 2,
+          ...shadows.small,
+        },
       ]}
     >
-      <MaterialCommunityIcons
+      <AnimatedIcon
         name="magnify"
-        size={20}
-        color={Colors.textLight}
-        style={styles.icon}
+        size={22}
+        color={isFocused ? theme.primary : theme.textSecondary}
+        style={[styles.icon, iconAnimatedStyle]}
       />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholderText}
-        placeholderTextColor={Colors.textLight}
+        placeholderTextColor={theme.textSecondary}
         onSubmitEditing={onSubmitEditing}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        style={styles.input}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        style={[
+          styles.input,
+          { color: theme.text }
+        ]}
         returnKeyType="search"
       />
-    </View>
+    </AnimatedView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 16, // px-4
-    paddingVertical: 12, // py-3
-  },
-  containerFocused: {
-    borderWidth: 2,
-    borderColor: Colors.primary, // cyan-500
-  },
   icon: {
-    marginRight: 8,
+    marginRight: Spacing.sm,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: Colors.text,
     padding: 0,
   },
 });

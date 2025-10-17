@@ -9,19 +9,22 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAudioPlayer } from 'expo-audio';
 import { api, synthesizeSpeech } from '../../services/api';
 import { Character, SimilarWord, ReverseTranslation } from '../../types/api.types';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../../constants/Colors';
 import { Card } from '../../components/ui/Card';
 import { IconButton } from '../../components/ui/IconButton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AddToCollectionModal } from '../../components/AddToCollectionModal';
 import { DefinitionGroup } from '../../components/character/DefinitionGroup';
 import { ExampleItem } from '../../components/character/ExampleItem';
+import { CharacterCard } from '../../components/ui/CharacterCard';
 import { showError } from '../../utils/toast';
 
 export default function CharacterDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { theme, shadows } = useTheme();
   const [activeTab, setActiveTab] = useState<'definitions' | 'examples' | 'similar' | 'reverse'>('definitions');
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
@@ -95,7 +98,7 @@ export default function CharacterDetailScreen() {
     <IconButton
       icon="bookmark-plus-outline"
       onPress={() => setModalVisible(true)}
-      color={Colors.primaryDark}
+      color={theme.primary}
     />
   );
   
@@ -126,30 +129,28 @@ export default function CharacterDetailScreen() {
           headerShown: true,
           headerRight: () => <HeaderRight />,
           headerStyle: {
-            backgroundColor: Colors.white,
+            backgroundColor: theme.surface,
           },
-          headerTintColor: Colors.text,
+          headerTintColor: theme.text,
           headerTitleStyle: {
             fontWeight: '600',
           },
         }}
       />
       <ScrollView 
-        style={styles.container} 
+        style={[styles.container, { backgroundColor: theme.background }]} 
         contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
       >
         <Card style={styles.characterCard}>
           <View style={styles.characterCardContent}>
-            <Text style={styles.character}>{character.simplified}</Text>
-            <View style={styles.pinyinRow}>
-              <Text style={styles.pinyin}>{character.pinyin}</Text>
-              <IconButton
-                icon={isLoadingAudio ? "loading" : player.playing ? "pause" : "volume-high"}
-                onPress={handlePlayAudio}
-                size={20}
-                disabled={isLoadingAudio || player.playing}
-              />
-            </View>
+            <Text style={[styles.character, { color: theme.text }]}>{character.simplified}</Text>
+            <Text style={[styles.pinyin, { color: theme.textSecondary }]}>{character.pinyin}</Text>
+            <IconButton
+              icon={isLoadingAudio ? "loading" : player.playing ? "pause" : "volume-high"}
+              onPress={handlePlayAudio}
+              size={20}
+              disabled={isLoadingAudio || player.playing}
+            />
           </View>
         </Card>
 
@@ -157,60 +158,88 @@ export default function CharacterDetailScreen() {
           <Card style={styles.statsCard}>
             <View style={styles.statsRow}>
               {character.hskLevel && (
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>HSK</Text>
-                  <View style={styles.hskBadge}>
-                    <Text style={styles.hskBadgeText}>
-                      {character.hskLevel}
-                    </Text>
-                  </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>HSK</Text>
+                <View style={[styles.hskBadge, { backgroundColor: theme.primaryPale }]}>
+                  <Text style={[styles.hskBadgeText, { color: theme.primaryDark }]}>
+                    {character.hskLevel}
+                  </Text>
                 </View>
+              </View>
               )}
               {character.frequency && (
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>{t('character.frequency')}</Text>
-                  <Text style={styles.statValue}>{character.frequency}</Text>
-                </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{t('character.frequency')}</Text>
+                <Text style={[styles.statValue, { color: theme.text }]}>{character.frequency}</Text>
+              </View>
               )}
             </View>
           </Card>
         )}
         
         <View>
-          <View style={styles.tabContainer}>
+          <View style={[styles.tabContainer, { borderBottomColor: theme.border }]}>
             <TouchableOpacity
               onPress={() => setActiveTab('definitions')}
-              style={[styles.tab, activeTab === 'definitions' && styles.activeTab]}
+              style={[
+                styles.tab,
+                { borderRightColor: theme.border },
+                activeTab === 'definitions' && [styles.activeTab, { borderBottomColor: theme.primary }]
+              ]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.tabButton, activeTab === 'definitions' && styles.activeTabText]}>
+              <Text style={[
+                styles.tabButton,
+                { color: activeTab === 'definitions' ? theme.primary : theme.textSecondary }
+              ]}>
                 {t('character.definitions')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab('examples')}
-              style={[styles.tab, activeTab === 'examples' && styles.activeTab]}
+              style={[
+                styles.tab,
+                { borderRightColor: theme.border },
+                activeTab === 'examples' && [styles.activeTab, { borderBottomColor: theme.primary }]
+              ]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.tabButton, activeTab === 'examples' && styles.activeTabText]}>
+              <Text style={[
+                styles.tabButton,
+                { color: activeTab === 'examples' ? theme.primary : theme.textSecondary }
+              ]}>
                 {t('character.examples')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab('similar')}
-              style={[styles.tab, activeTab === 'similar' && styles.activeTab]}
+              style={[
+                styles.tab,
+                { borderRightColor: theme.border },
+                activeTab === 'similar' && [styles.activeTab, { borderBottomColor: theme.primary }]
+              ]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.tabButton, activeTab === 'similar' && styles.activeTabText]}>
+              <Text style={[
+                styles.tabButton,
+                { color: activeTab === 'similar' ? theme.primary : theme.textSecondary }
+              ]}>
                 {t('character.similarWords')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab('reverse')}
-              style={[styles.tab, activeTab === 'reverse' && styles.activeTab]}
+              style={[
+                styles.tab,
+                styles.lastTab,
+                activeTab === 'reverse' && [styles.activeTab, { borderBottomColor: theme.primary }]
+              ]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.tabButton, activeTab === 'reverse' && styles.activeTabText]}>
+              <Text style={[
+                styles.tabButton,
+                { color: activeTab === 'reverse' ? theme.primary : theme.textSecondary }
+              ]}>
                 {t('character.reverseTranslations')}
               </Text>
             </TouchableOpacity>
@@ -233,12 +262,12 @@ export default function CharacterDetailScreen() {
                         highlightCharacter={character.simplified}
                       />
                       {idx < (character.examples?.length ?? 0) - 1 && (
-                        <Divider style={styles.divider} />
+                        <Divider style={[styles.divider, { backgroundColor: theme.border }]} />
                       )}
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.noExamplesText}>{t('character.noExamples')}</Text>
+                  <Text style={[styles.noExamplesText, { color: theme.textSecondary }]}>{t('character.noExamples')}</Text>
                 )}
               </View>
             )}
@@ -247,28 +276,33 @@ export default function CharacterDetailScreen() {
               <View style={styles.similarList}>
                 {isSimilarLoading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={Colors.primary} />
+                    <ActivityIndicator size="large" color={theme.primary} />
                   </View>
                 ) : similarWords && similarWords.length > 0 ? (
-                  similarWords.map((word, idx) => (
-                    <Card 
-                      key={`${word.id}-${idx}`}
-                      style={styles.similarCard}
-                      onPress={() => router.push(`/character/${word.id}`)}
-                    >
-                      <View style={styles.similarContent}>
-                        <View style={styles.similarLeft}>
-                          <Text style={styles.similarChinese}>{word.simplified}</Text>
-                          <Text style={styles.similarPinyin}>{word.pinyin}</Text>
-                        </View>
-                        <Text style={styles.similarTranslation} numberOfLines={2}>
-                          {word.mainTranslation}
-                        </Text>
-                      </View>
-                    </Card>
-                  ))
+                  similarWords.map((word, idx) => {
+                    // Преобразуем SimilarWord в Character для CharacterCard
+                    const character: Character = {
+                      id: word.id,
+                      simplified: word.simplified,
+                      pinyin: word.pinyin,
+                      definitions: [{ 
+                        id: `${word.id}-def`,
+                        translation: word.mainTranslation,
+                        order: 1
+                      }],
+                      examples: [],
+                    };
+                    
+                    return (
+                      <CharacterCard
+                        key={`${word.id}-${idx}`}
+                        character={character}
+                        onPress={() => router.push(`/character/${word.id}`)}
+                      />
+                    );
+                  })
                 ) : (
-                  <Text style={styles.noExamplesText}>{t('character.noSimilarWords')}</Text>
+                  <Text style={[styles.noExamplesText, { color: theme.textSecondary }]}>{t('character.noSimilarWords')}</Text>
                 )}
               </View>
             )}
@@ -277,25 +311,25 @@ export default function CharacterDetailScreen() {
               <View style={styles.reverseList}>
                 {isReverseLoading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={Colors.primary} />
+                    <ActivityIndicator size="large" color={theme.primary} />
                   </View>
                 ) : reverseTranslations && reverseTranslations.length > 0 ? (
                   reverseTranslations.map((trans, idx) => (
                     <View key={`reverse-${idx}`}>
                       <View style={styles.reverseItem}>
-                        <Text style={styles.reverseRussian}>{trans.russian}</Text>
-                        <Text style={styles.reverseChinese}>{trans.chinese}</Text>
+                        <Text style={[styles.reverseRussian, { color: theme.text }]}>{trans.russian}</Text>
+                        <Text style={[styles.reverseChinese, { color: theme.text }]}>{trans.chinese}</Text>
                         {trans.pinyin && (
-                          <Text style={styles.reversePinyin}>{trans.pinyin}</Text>
+                          <Text style={[styles.reversePinyin, { color: theme.textSecondary }]}>{trans.pinyin}</Text>
                         )}
                       </View>
                       {idx < reverseTranslations.length - 1 && (
-                        <Divider style={styles.divider} />
+                        <Divider style={[styles.divider, { backgroundColor: theme.border }]} />
                       )}
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.noExamplesText}>{t('character.noReverseTranslations')}</Text>
+                  <Text style={[styles.noExamplesText, { color: theme.textSecondary }]}>{t('character.noReverseTranslations')}</Text>
                 )}
               </View>
             )}
@@ -319,174 +353,140 @@ export default function CharacterDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
-    padding: 24,
-    // paddingTop убран - используется headerShown: true
-    gap: 24,
+    padding: Spacing.xl,
+    gap: Spacing.xl,
     paddingBottom: 120,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    padding: 24,
+    padding: Spacing.xl,
   },
   characterCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
   },
   characterCardContent: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: Spacing.md,
     padding: 0,
+    gap: Spacing.sm,
   },
   character: {
     fontFamily: 'Noto Serif SC',
-    fontSize: 80,
+    fontSize: 88,
     fontWeight: '700',
-    color: Colors.text, // gray-800
-  },
-  pinyinRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    gap: 8,
+    letterSpacing: 2,
   },
   pinyin: {
-    fontSize: 24,
-    color: Colors.textLight, // gray-500
+    fontSize: 26,
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   statsCard: {
-    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.xl,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 8,
+    paddingVertical: Spacing.md,
     padding: 0,
   },
   statItem: {
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   statLabel: {
-    color: Colors.textLight,
-    fontSize: 12,
+    fontSize: 13,
+    letterSpacing: 0.2,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: Colors.text,
+    letterSpacing: -0.5,
   },
   hskBadge: {
-    backgroundColor: Colors.secondary, // orange-500
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
   },
   hskBadgeText: {
-    color: Colors.white,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
-    borderBottomWidth: 2,
+    justifyContent: 'center',
+    borderBottomWidth: 3,
     borderBottomColor: 'transparent',
+    borderRightWidth: 1,
+  },
+  lastTab: {
+    borderRightWidth: 0,
   },
   activeTab: {
-    borderBottomColor: Colors.primary, // cyan-500
+    // динамический цвет применяется через inline style
   },
   tabButton: {
     fontSize: 14,
-    color: Colors.textLight, // gray-500
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
   activeTabText: {
-    color: Colors.primaryDark, // cyan-600
+    // динамический цвет применяется через inline style
   },
   tabContent: {
-    paddingTop: 16,
+    paddingTop: Spacing.lg,
   },
   definitionsList: {
     gap: 0,
   },
   divider: {
-    backgroundColor: Colors.border,
+    // динамический цвет применяется через inline style
   },
   examplesList: {
     gap: 0,
   },
   noExamplesText: {
-    color: Colors.textLight,
     textAlign: 'center',
-    padding: 16,
+    padding: Spacing.lg,
+    fontSize: 15,
   },
   similarList: {
-    gap: 12,
-  },
-  similarCard: {
-    backgroundColor: Colors.white,
-  },
-  similarContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-    padding: 0,
-  },
-  similarLeft: {
-    gap: 4,
-  },
-  similarChinese: {
-    fontFamily: 'Noto Serif SC',
-    fontSize: 20,
-    color: Colors.text,
-    fontWeight: '600',
-  },
-  similarPinyin: {
-    fontSize: 14,
-    color: Colors.textLight,
-  },
-  similarTranslation: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.text,
+    gap: Spacing.md,
   },
   reverseList: {
     gap: 0,
   },
   reverseItem: {
-    paddingVertical: 12,
-    gap: 6,
+    paddingVertical: Spacing.md,
+    gap: Spacing.xs,
   },
   reverseRussian: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: Colors.text,
+    letterSpacing: 0.2,
   },
   reverseChinese: {
     fontFamily: 'Noto Serif SC',
-    fontSize: 18,
-    color: Colors.text,
+    fontSize: 20,
+    letterSpacing: 0.5,
   },
   reversePinyin: {
     fontSize: 14,
-    color: Colors.textLight,
+    letterSpacing: 0.2,
   },
   loadingContainer: {
     padding: 32,

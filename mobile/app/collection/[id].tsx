@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
 import { ActivityIndicator } from 'react-native-paper';
 import { CollectionItem, Character as CharacterType } from '../../types/api.types';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
 import { CharacterCard } from '../../components/ui/CharacterCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { showError } from '../../utils/toast';
@@ -36,6 +36,7 @@ export default function CollectionDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   const { data, loading, refetch, error } = useQuery(GET_COLLECTION, {
@@ -92,12 +93,16 @@ export default function CollectionDetailScreen() {
         options={{
           title: `${collection.icon || '📚'} ${collection.name}`,
           headerShown: true,
+          headerStyle: {
+            backgroundColor: theme.surface,
+          },
+          headerTintColor: theme.text,
         }}
       />
       <FlatList
         data={collection.items.filter((item: CollectionItem) => item.character)}
         keyExtractor={(item: CollectionItem) => item.characterId}
-        contentContainerStyle={[styles.container, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 24, backgroundColor: theme.background }]}
         onRefresh={refetch}
         refreshing={loading}
         ListEmptyComponent={
@@ -142,10 +147,8 @@ export default function CollectionDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   container: {
-    backgroundColor: Colors.background,
     padding: 24,
     gap: 12,
     paddingBottom: 120,
@@ -154,7 +157,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
     padding: 24,
   },
 });

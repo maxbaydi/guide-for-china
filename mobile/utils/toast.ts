@@ -3,6 +3,9 @@ import i18n from '../services/i18n';
 
 /**
  * Утилиты для отображения toast уведомлений
+ * 
+ * Стили toast настраиваются через кастомный конфиг в toastConfig.tsx,
+ * который использует цвета из текущей темы приложения (светлая/темная).
  */
 
 export const showSuccess = (message: string, title?: string) => {

@@ -49,9 +49,6 @@ export const DefinitionGroup: React.FC<DefinitionGroupProps> = ({ definitions })
           {grouped[partOfSpeech].map((def, defIndex) => (
             <View key={`${partOfSpeech}-${def.id}-${defIndex}`}>
               <View style={styles.definitionItem}>
-                {/* Номер определения */}
-                <Text style={styles.definitionNumber}>{def.order + 1}.</Text>
-                
                 <View style={styles.definitionContent}>
                   {/* Контекстная пометка (если есть) */}
                   {def.context && (
@@ -102,19 +99,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   definitionItem: {
-    flexDirection: 'row',
     paddingVertical: 12,
     paddingHorizontal: 4,
-    gap: 12,
-  },
-  definitionNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: CharacterColors.secondary,
-    minWidth: 24,
   },
   definitionContent: {
-    flex: 1,
     gap: 4,
   },
   context: {

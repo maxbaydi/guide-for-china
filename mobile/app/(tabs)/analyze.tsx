@@ -6,7 +6,8 @@ import { useMutation } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { api } from '../../services/api';
 import { CharacterAnalysis } from '../../types/api.types';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../../constants/Colors';
 import { CustomButton } from '../../components/ui/Button';
 import { showError } from '../../utils/toast';
 import { getErrorMessage } from '../../utils/errorHandler';
@@ -16,6 +17,7 @@ const MAX_TEXT_LENGTH = 300;
 export default function AnalyzeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { theme, shadows } = useTheme();
   const [text, setText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
@@ -76,7 +78,7 @@ export default function AnalyzeScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
     >
       <ScrollView 
         style={styles.container}
@@ -84,10 +86,10 @@ export default function AnalyzeScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: theme.text }]}>
             {t('analyze.title')}
           </Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             {t('analyze.subtitle')}
           </Text>
         </View>
@@ -96,11 +98,17 @@ export default function AnalyzeScreen() {
           value={text}
           onChangeText={handleTextChange}
           placeholder={t('analyze.placeholder') || '我爱学中文...'}
-          placeholderTextColor={Colors.textLight}
+          placeholderTextColor={theme.textSecondary}
           multiline
           style={[
             styles.textInput,
-            isFocused && styles.textInputFocused
+            {
+              backgroundColor: theme.surface,
+              borderColor: isFocused ? theme.primary : theme.border,
+              borderWidth: isFocused ? 2 : 1,
+              color: theme.text,
+              ...shadows.small,
+            }
           ]}
           maxLength={MAX_TEXT_LENGTH}
           onFocus={() => setIsFocused(true)}
@@ -110,7 +118,7 @@ export default function AnalyzeScreen() {
         <Text 
           style={[
             styles.characterCount,
-            text.length >= MAX_TEXT_LENGTH && styles.characterCountLimit
+            { color: text.length >= MAX_TEXT_LENGTH ? theme.secondary : theme.textSecondary }
           ]}
         >
           {t('analyze.characterCount', { count: text.length, max: MAX_TEXT_LENGTH })}
@@ -151,56 +159,46 @@ export default function AnalyzeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 60,
     paddingBottom: 120,
-    gap: 24,
+    gap: Spacing.xl,
   },
   header: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: Colors.text,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textLight,
-    marginTop: 4,
+    marginTop: Spacing.xs,
+    letterSpacing: 0.2,
+    lineHeight: 22,
   },
   textInput: {
-    minHeight: 192, // h-48
+    minHeight: 200,
     maxHeight: 400,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.text,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    fontSize: 17,
     textAlignVertical: 'top',
-  },
-  textInputFocused: {
-    borderWidth: 2,
-    borderColor: Colors.primary, // cyan-500
+    lineHeight: 24,
   },
   characterCount: {
-    fontSize: 12,
-    color: Colors.textLight,
+    fontSize: 13,
     textAlign: 'right',
-    marginTop: -16,
-  },
-  characterCountLimit: {
-    color: Colors.secondary, // orange-500
+    marginTop: -Spacing.lg,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: Spacing.lg,
   },
   secondaryButton: {
     flex: 1,

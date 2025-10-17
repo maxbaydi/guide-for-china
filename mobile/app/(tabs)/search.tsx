@@ -12,7 +12,8 @@ import { Card } from '../../components/ui/Card';
 import { Avatar } from '../../components/ui/Avatar';
 import { CustomButton } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../../constants/Colors';
 import { api } from '../../services/api';
 import { Character } from '../../types/api.types';
 
@@ -20,6 +21,7 @@ export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const { theme, shadows } = useTheme();
   const [query, setQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isWordOfDayEnabled, setIsWordOfDayEnabled] = useState(true);
@@ -97,20 +99,22 @@ export default function SearchScreen() {
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>{t('search.greeting')}</Text>
-          <Text style={styles.headerName}>
+          <Text style={[styles.headerGreeting, { color: theme.textSecondary }]}>
+            {t('search.greeting')}
+          </Text>
+          <Text style={[styles.headerName, { color: theme.text }]}>
             {user?.username || t('common.testUser')}
           </Text>
         </View>
         <Avatar 
           initials={user?.username?.charAt(0) || 'U'} 
-          size={40}
+          size={48}
         />
       </View>
 
@@ -132,7 +136,9 @@ export default function SearchScreen() {
       
       {searchHistory.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('search.history')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            {t('search.history')}
+          </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipContainer}>
             {searchHistory.map((item, index) => (
               <Chip
@@ -148,25 +154,36 @@ export default function SearchScreen() {
 
       {isWordOfDayEnabled && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('search.wordOfTheDay')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            {t('search.wordOfTheDay')}
+          </Text>
           {isLoadingWord ? (
-            <Card style={styles.wordOfTheDayCard}>
+            <Card variant="gradient" style={styles.wordOfTheDayCard}>
               <View style={styles.wordOfTheDayContent}>
-                <ActivityIndicator size="large" color={Colors.white} />
+                <ActivityIndicator size="large" color={theme.textInverse} />
               </View>
             </Card>
           ) : wordOfTheDay ? (
             <Card variant="gradient" onPress={() => navigateToCharacter(wordOfTheDay.id)} style={styles.wordOfTheDayCard}>
               <View style={styles.wordOfTheDayContent}>
-                <Text style={styles.wordOfTheDayChar}>{wordOfTheDay.simplified}</Text>
-                <View style={styles.wordOfTheDayInfo}>
-                  <Text style={styles.wordOfTheDayTranslation}>
+                <View style={styles.wordOfTheDayCharacterColumn}>
+                  <Text style={[styles.wordOfTheDayChar, { color: theme.textInverse }]}>
+                    {wordOfTheDay.simplified}
+                  </Text>
+                  {wordOfTheDay.pinyin && (
+                    <Text style={[styles.wordOfTheDayPinyin, { color: theme.textInverse }]}>
+                      {wordOfTheDay.pinyin}
+                    </Text>
+                  )}
+                </View>
+                <View style={styles.wordOfTheDayTextColumn}>
+                  <Text style={[styles.wordOfTheDayTranslation, { color: theme.textInverse }]}>
                     {wordOfTheDay.definitions && wordOfTheDay.definitions.length > 0
                       ? wordOfTheDay.definitions[0].translation
                       : t('character.noTranslation')}
                   </Text>
                   {wordOfTheDay.examples && wordOfTheDay.examples.length > 0 && (
-                    <Text style={styles.wordOfTheDayExample} numberOfLines={2}>
+                    <Text style={[styles.wordOfTheDayExample, { color: theme.textInverse }]} numberOfLines={2}>
                       {wordOfTheDay.examples[0].chinese}
                     </Text>
                   )}
@@ -176,7 +193,7 @@ export default function SearchScreen() {
           ) : wordError ? (
             <Card variant="gradient" style={styles.wordOfTheDayCard}>
               <View>
-                <Text style={{ color: Colors.white, textAlign: 'center' }}>
+                <Text style={{ color: theme.textInverse, textAlign: 'center' }}>
                   {t('search.wordOfTheDayUnavailable')}
                 </Text>
               </View>
@@ -192,13 +209,12 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 60,
-    paddingBottom: 120, // For bottom nav
-    gap: 24,
+    paddingBottom: 120,
+    gap: Spacing.xl,
   },
   header: {
     flexDirection: 'row',
@@ -206,59 +222,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerGreeting: {
-    fontSize: 14,
-    color: Colors.textLight, // gray-500
+    fontSize: 15,
+    letterSpacing: 0.2,
   },
   headerName: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: Colors.text, // gray-800
+    letterSpacing: -0.5,
+    marginTop: Spacing.xs,
   },
   section: {
-    gap: 12,
+    gap: Spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   chipContainer: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   wordOfTheDayCard: {
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
   },
   wordOfTheDayContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
     padding: 0,
+  },
+  wordOfTheDayCharacterColumn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 60,
+    gap: Spacing.xs,
   },
   wordOfTheDayChar: {
     fontFamily: 'Noto Serif SC',
-    fontSize: 52,
+    fontSize: 44,
     fontWeight: '700',
-    color: Colors.white,
+    letterSpacing: 1,
   },
-  wordOfTheDayInfo: {
+  wordOfTheDayTextColumn: {
     flex: 1,
-    gap: 4,
+    justifyContent: 'center',
+    gap: Spacing.xs,
+  },
+  wordOfTheDayPinyin: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   wordOfTheDayTranslation: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: Colors.white,
+    letterSpacing: 0.2,
+    lineHeight: 24,
   },
   wordOfTheDayExample: {
-    fontSize: 14,
-    color: Colors.white,
+    fontSize: 15,
     opacity: 0.9,
+    lineHeight: 22,
   },
   searchButton: {
-    backgroundColor: Colors.secondary, // orange-500
-  },
-  searchButtonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: Spacing.sm,
   },
 });

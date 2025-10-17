@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
 import { useAuth } from '../../hooks/useAuth';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../../constants/Colors';
 import { Avatar } from '../../components/ui/Avatar';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Card } from '../../components/ui/Card';
@@ -40,6 +41,7 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, logout, rateLimitsInfo } = useAuth();
+  const { theme, shadows } = useTheme();
 
   const { data, refetch } = useQuery(GET_MY_STATS, { fetchPolicy: 'cache-and-network' });
   const stats = data?.myStatistics;
@@ -64,51 +66,55 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: theme.background }]} 
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.header}>
         <Avatar 
           initials={user?.username?.charAt(0) || 'U'} 
-          size={80}
+          size={96}
         />
-        <Text style={styles.userName}>
+        <Text style={[styles.userName, { color: theme.text }]}>
           {user?.username || t('common.testUser')}
         </Text>
-        <Text style={styles.userEmail}>
+        <Text style={[styles.userEmail, { color: theme.textSecondary }]}>
           {user?.email}
         </Text>
       </View>
 
-      <Card style={styles.card}>
+      <Card variant="elevated" style={styles.card}>
         <View style={styles.cardContent}>
-          <Text style={styles.requestsText}>
+          <Text style={[styles.requestsText, { color: theme.text }]}>
             {t('profile.requestsRemainingDaily', { remaining: requestsRemaining, total: requestsLimit })}
           </Text>
           <ProgressBar 
             progress={requestsProgress} 
             variant={requestsProgress > 0.8 ? 'warning' : 'gradient'}
-            style={styles.progressBar} 
+            style={styles.progressBar}
+            height={12}
           />
-          <Text style={styles.dailyLimitInfo}>
+          <Text style={[styles.dailyLimitInfo, { color: theme.textSecondary }]}>
             {t('profile.dailyLimitInfo')}
           </Text>
         </View>
       </Card>
 
-      <Card style={styles.card}>
+      <Card variant="elevated" style={styles.card}>
         <View style={styles.cardContent}>
-          <Text style={styles.statsTitle}>{t('profile.statistics')}</Text>
+          <Text style={[styles.statsTitle, { color: theme.text }]}>{t('profile.statistics')}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats?.charactersLearned || 0}</Text>
-              <Text style={styles.statLabel}>{t('profile.wordsLearned')}</Text>
+              <Text style={[styles.statValue, { color: theme.primary }]}>{stats?.charactersLearned || 0}</Text>
+              <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{t('profile.wordsLearned')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats?.collectionsCount || 0}</Text>
-              <Text style={styles.statLabel}>{t('profile.collections')}</Text>
+              <Text style={[styles.statValue, { color: theme.primary }]}>{stats?.collectionsCount || 0}</Text>
+              <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{t('profile.collections')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats?.searchCount || 0}</Text>
-              <Text style={styles.statLabel}>{t('profile.totalSearches')}</Text>
+              <Text style={[styles.statValue, { color: theme.primary }]}>{stats?.searchCount || 0}</Text>
+              <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{t('profile.totalSearches')}</Text>
             </View>
           </View>
         </View>
@@ -119,7 +125,7 @@ export default function ProfileScreen() {
             variant="secondary" 
             onPress={() => router.push('/settings')} 
             style={styles.actionButton}
-            icon={<Settings size={20} color={Colors.white} />}
+            icon={<Settings size={20} color={theme.textInverse} />}
         >
           {t('profile.settings')}
         </CustomButton>
@@ -138,56 +144,53 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 60,
     paddingBottom: 120,
-    gap: 24,
+    gap: Spacing.xl,
   },
   header: {
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.md,
   },
   userName: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: Colors.text, // gray-800
+    letterSpacing: -0.5,
   },
   userEmail: {
     fontSize: 16,
-    color: Colors.textLight, // gray-500
+    letterSpacing: 0.2,
   },
   card: {
-    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.xl,
   },
   cardContent: {
     padding: 0,
   },
   requestsText: {
     textAlign: 'center',
-    color: Colors.text,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    letterSpacing: 0.2,
   },
   progressBar: {
-    height: 8,
-    borderRadius: 4,
     width: '100%',
   },
   dailyLimitInfo: {
     textAlign: 'center',
-    color: Colors.textLight,
-    fontSize: 12,
-    marginTop: 8,
+    fontSize: 13,
+    marginTop: Spacing.sm,
+    lineHeight: 18,
   },
   statsTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 16,
+    marginBottom: Spacing.xl,
+    letterSpacing: 0.2,
   },
   statsRow: {
     flexDirection: 'row',
@@ -195,33 +198,25 @@ const styles = StyleSheet.create({
   },
   statItem: {
     alignItems: 'center',
+    gap: Spacing.xs,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: '700',
-    color: Colors.text,
+    letterSpacing: -0.5,
   },
   statLabel: {
-    fontSize: 14,
-    color: Colors.textLight,
-    marginTop: 4,
+    fontSize: 13,
+    marginTop: Spacing.xs,
+    letterSpacing: 0.2,
   },
   actions: {
-    gap: 12,
+    gap: Spacing.md,
   },
   actionButton: {
-    // Убираем переопределение фона, чтобы использовался стиль из variant="secondary"
-  },
-  actionButtonLabel: {
-    color: Colors.text,
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  buttonLabel: {
-    fontWeight: '600',
-    fontSize: 16,
+    // variant styles applied
   },
   logoutButton: {
-    borderColor: Colors.border,
+    // variant styles applied
   },
 });

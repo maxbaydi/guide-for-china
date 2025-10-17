@@ -6,7 +6,8 @@ import { useQuery, gql } from '@apollo/client';
 import { Divider, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Collection } from '../../types/api.types';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../../constants/Colors';
 import { Card } from '../../components/ui/Card';
 import { CustomButton } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -27,6 +28,7 @@ const GET_MY_COLLECTIONS = gql`
 export default function CollectionsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { theme } = useTheme();
 
   const { data, loading, refetch, error } = useQuery(GET_MY_COLLECTIONS, {
     fetchPolicy: 'cache-and-network',
@@ -63,21 +65,21 @@ export default function CollectionsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: theme.text }]}>
           {t('collections.title')}
         </Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
           {t('collections.subtitle')}
         </Text>
       </View>
 
-      <Card style={styles.card}>
+      <Card variant="elevated" style={styles.card}>
         <FlatList
           data={collections}
           keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => <Divider />}
+          ItemSeparatorComponent={() => <Divider style={{ backgroundColor: theme.border }} />}
           ListEmptyComponent={
             <EmptyState
               icon="folder-multiple-outline"
@@ -91,11 +93,15 @@ export default function CollectionsScreen() {
               onPress={() => router.push(`/collection/${item.id}`)}
               activeOpacity={0.7}
             >
-              <View>
-                <Text style={styles.collectionName}>{item.icon} {item.name}</Text>
-                <Text style={styles.collectionMeta}>{item.itemCount} {t('collections.words')}</Text>
+              <View style={styles.collectionInfo}>
+                <Text style={[styles.collectionName, { color: theme.text }]}>
+                  {item.icon} {item.name}
+                </Text>
+                <Text style={[styles.collectionMeta, { color: theme.textSecondary }]}>
+                  {item.itemCount} {t('collections.words')}
+                </Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.textLight} />
+              <MaterialCommunityIcons name="chevron-right" size={24} color={theme.primary} />
             </TouchableOpacity>
           )}
         />
@@ -105,7 +111,7 @@ export default function CollectionsScreen() {
         variant="dashed"
         onPress={handleCreateCollection}
         style={styles.createButton}
-        icon={<MaterialCommunityIcons name="plus" size={20} color={Colors.textLight} />}
+        icon={<MaterialCommunityIcons name="plus" size={20} color={theme.textSecondary} />}
       >
         {t('collections.createNew')}
       </CustomButton>
@@ -116,11 +122,10 @@ export default function CollectionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 60,
     paddingBottom: 120,
-    gap: 24,
+    gap: Spacing.xl,
   },
   centered: {
     flex: 1,
@@ -128,40 +133,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    color: Colors.text,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textLight,
-    marginTop: 4,
+    marginTop: Spacing.xs,
+    letterSpacing: 0.2,
+    lineHeight: 22,
   },
   card: {
-    backgroundColor: Colors.white,
     flex: 1,
+    borderRadius: BorderRadius.xl,
   },
   collectionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+  },
+  collectionInfo: {
+    flex: 1,
+    gap: Spacing.xs,
   },
   collectionName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
+    letterSpacing: 0.2,
   },
   collectionMeta: {
-    color: Colors.textLight,
     fontSize: 14,
-    marginTop: 4,
+    letterSpacing: 0.2,
   },
   createButton: {
-    marginTop: 12,
+    marginTop: Spacing.md,
   },
 });

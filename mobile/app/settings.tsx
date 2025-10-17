@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text, Card, Switch, SegmentedButtons } from 'react-native-paper';
 import { useMutation, gql } from '@apollo/client';
 import { useAuth } from '../hooks/useAuth';
-import { Colors } from '../constants/Colors';
+import { useTheme } from '../contexts/ThemeContext';
+import { Spacing, BorderRadius } from '../constants/Colors';
 import { showSuccess, showError } from '../utils/toast';
 import { getErrorMessage } from '../utils/errorHandler';
 import { saveLanguage } from '../services/i18n';
@@ -33,6 +34,7 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const insets = useSafeAreaInsets();
   
   // Profile fields
@@ -196,19 +198,28 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <Stack.Screen options={{ title: t('profile.settings'), headerShown: true }} />
+      <Stack.Screen 
+        options={{ 
+          title: t('profile.settings'), 
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: theme.surface,
+          },
+          headerTintColor: theme.text,
+        }} 
+      />
       
       <ScrollView 
-        style={styles.container} 
+        style={[styles.container, { backgroundColor: theme.background }]} 
         contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
       >
       
       {/* Profile Section */}
       <View style={styles.sectionHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>{t('settings.profile')}</Text>
+        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.text }]}>{t('settings.profile')}</Text>
       </View>
       
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.surface }]}>
         <Card.Content style={styles.cardContent}>
           <TextInput
             label={t('auth.username')}
@@ -233,10 +244,10 @@ export default function SettingsScreen() {
 
       {/* Security Section */}
       <View style={styles.sectionHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>{t('settings.security')}</Text>
+        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.text }]}>{t('settings.security')}</Text>
       </View>
       
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.surface }]}>
         <Card.Content style={styles.cardContent}>
           <TextInput
             label={t('settings.currentPassword')}
@@ -273,14 +284,46 @@ export default function SettingsScreen() {
 
       {/* Preferences Section */}
       <View style={styles.sectionHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>{t('settings.preferences')}</Text>
+        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.text }]}>{t('settings.preferences')}</Text>
       </View>
       
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.surface }]}>
+        {/* Theme Selector */}
         <View style={styles.settingItem}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.settingLabel}>{t('settings.language')}</Text>
-            <Text style={styles.settingDescription}>{t('settings.languageDescription')}</Text>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>{t('settings.theme')}</Text>
+            <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>{t('settings.themeDescription')}</Text>
+          </View>
+        </View>
+        <View style={styles.languageSwitcher}>
+          <SegmentedButtons
+            value={themeMode}
+            onValueChange={(value) => setThemeMode(value as 'light' | 'dark' | 'system')}
+            buttons={[
+              {
+                value: 'light',
+                label: t('settings.themeLight'),
+                icon: 'white-balance-sunny',
+              },
+              {
+                value: 'dark',
+                label: t('settings.themeDark'),
+                icon: 'weather-night',
+              },
+              {
+                value: 'system',
+                label: t('settings.themeSystem'),
+                icon: 'theme-light-dark',
+              },
+            ]}
+          />
+        </View>
+
+        {/* Language Selector */}
+        <View style={styles.settingItem}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>{t('settings.language')}</Text>
+            <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>{t('settings.languageDescription')}</Text>
           </View>
         </View>
         <View style={styles.languageSwitcher}>
@@ -302,10 +345,11 @@ export default function SettingsScreen() {
           />
         </View>
         
+        {/* Word of the Day Toggle */}
         <View style={styles.settingItem}>
           <View>
-            <Text style={styles.settingLabel}>{t('settings.wordOfTheDay')}</Text>
-            <Text style={styles.settingDescription}>{t('settings.wordOfTheDayDescription')}</Text>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>{t('settings.wordOfTheDay')}</Text>
+            <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>{t('settings.wordOfTheDayDescription')}</Text>
           </View>
           <Switch 
             value={isWordOfDayEnabled} 
@@ -321,64 +365,54 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
-    padding: 24,
-    gap: 16,
+    padding: Spacing.xl,
+    gap: Spacing.lg,
     paddingBottom: 120,
   },
   sectionHeader: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   sectionTitle: {
     fontWeight: '600',
-    color: Colors.text,
   },
   card: {
-    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.xl,
   },
   cardContent: {
-    gap: 12,
-  },
-  input: {
-    backgroundColor: Colors.white,
+    gap: Spacing.md,
   },
   helperText: {
-    color: Colors.textLight,
-    marginTop: -8,
-    marginBottom: 4,
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   button: {
-    marginTop: 8,
-    backgroundColor: Colors.primary,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: Spacing.sm,
   },
   passwordHint: {
-    color: Colors.textLight,
-    marginTop: -4,
-    marginBottom: 4,
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.xs,
   },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: Spacing.lg,
   },
   settingLabel: {
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   settingDescription: {
-    color: Colors.textLight,
-    fontSize: 12,
+    fontSize: 13,
+    marginTop: Spacing.xs,
+    lineHeight: 18,
   },
   languageSwitcher: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
 });
