@@ -1,0 +1,24 @@
+# Устанавливаем окончания строк для всех текстовых файлов
+* text=auto
+
+# Явно указываем для конкретных типов файлов
+*.js text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Бинарные файлы
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.apk binary
+*.gz binary
