@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Divider } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { Definition } from '../../types/api.types';
 import { Colors, CharacterColors } from '../../constants/Colors';
 import { renderBKRSText } from '../../utils/bkrsParser';
@@ -14,12 +15,14 @@ interface DefinitionGroupProps {
  * с цветовым кодированием
  */
 export const DefinitionGroup: React.FC<DefinitionGroupProps> = ({ definitions }) => {
+  const { t } = useTranslation();
+  
   // Группируем определения по partOfSpeech
   const grouped = React.useMemo(() => {
     const groups: { [key: string]: Definition[] } = {};
     
     definitions.forEach((def) => {
-      const key = def.partOfSpeech || 'Общее';
+      const key = def.partOfSpeech || t('character.generalDef');
       if (!groups[key]) {
         groups[key] = [];
       }
@@ -27,7 +30,7 @@ export const DefinitionGroup: React.FC<DefinitionGroupProps> = ({ definitions })
     });
     
     return groups;
-  }, [definitions]);
+  }, [definitions, t]);
 
   const groupKeys = Object.keys(grouped);
 
@@ -36,7 +39,7 @@ export const DefinitionGroup: React.FC<DefinitionGroupProps> = ({ definitions })
       {groupKeys.map((partOfSpeech, groupIndex) => (
         <View key={partOfSpeech}>
           {/* Заголовок группы (часть речи) */}
-          {partOfSpeech !== 'Общее' && (
+          {partOfSpeech !== t('character.generalDef') && (
             <View style={styles.partOfSpeechContainer}>
               <Text style={styles.partOfSpeech}>{partOfSpeech}</Text>
             </View>

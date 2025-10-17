@@ -23,6 +23,7 @@
   "search": {
     "title": "Поиск",
     "placeholder": "Иероглиф, пиньинь или перевод",
+    "searchPlaceholder": "Поиск...",
     "history": "История поиска",
     "noResults": "Результаты не найдены",
     "resultsFound": "Найдено {{count}} результата",
@@ -47,6 +48,7 @@
     "hskLevel": "HSK",
     "frequency": "Частота",
     "definitions": "Переводы",
+    "generalDef": "Общее",
     "examples": "Примеры",
     "similarWords": "Похожие",
     "reverseTranslations": "В русских словах",
@@ -116,8 +118,11 @@
   },
   "errors": {
     "loginFailed": "Ошибка входа",
+    "loginError": "Ошибка входа",
     "registerFailed": "Ошибка регистрации",
+    "registerError": "Ошибка регистрации",
     "networkError": "Ошибка сети",
+    "networkConnectionError": "Ошибка сети. Проверьте подключение к интернету",
     "searchFailed": "Ошибка поиска",
     "analysisFailed": "Ошибка анализа текста",
     "invalidEmail": "Неверный email",
@@ -151,7 +156,12 @@
     "loading": "Загрузка...",
     "soon": "Скоро",
     "comingSoon": "Скоро появится",
-    "create": "Создать"
+    "create": "Создать",
+    "testUser": "Тестовый пользователь",
+    "success": "Успешно",
+    "error": "Ошибка",
+    "info": "Информация",
+    "warning": "Внимание"
   },
   "settings": {
     "profile": "Профиль",

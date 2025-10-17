@@ -1,4 +1,5 @@
 import Toast from 'react-native-toast-message';
+import i18n from '../services/i18n';
 
 /**
  * Утилиты для отображения toast уведомлений
@@ -7,7 +8,7 @@ import Toast from 'react-native-toast-message';
 export const showSuccess = (message: string, title?: string) => {
   Toast.show({
     type: 'success',
-    text1: title || 'Успешно',
+    text1: title || i18n.t('common.success'),
     text2: message,
     position: 'top',
     visibilityTime: 3000,
@@ -18,7 +19,7 @@ export const showSuccess = (message: string, title?: string) => {
 export const showError = (message: string, title?: string) => {
   Toast.show({
     type: 'error',
-    text1: title || 'Ошибка',
+    text1: title || i18n.t('common.error'),
     text2: message,
     position: 'top',
     visibilityTime: 4000,
@@ -29,7 +30,7 @@ export const showError = (message: string, title?: string) => {
 export const showInfo = (message: string, title?: string) => {
   Toast.show({
     type: 'info',
-    text1: title || 'Информация',
+    text1: title || i18n.t('common.info'),
     text2: message,
     position: 'top',
     visibilityTime: 3000,
@@ -40,7 +41,7 @@ export const showInfo = (message: string, title?: string) => {
 export const showWarning = (message: string, title?: string) => {
   Toast.show({
     type: 'info', // Toast не имеет встроенного типа warning, используем info
-    text1: title || 'Внимание',
+    text1: title || i18n.t('common.warning'),
     text2: message,
     position: 'top',
     visibilityTime: 3500,

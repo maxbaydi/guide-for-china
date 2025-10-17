@@ -18,26 +18,23 @@ export default function TabsLayout() {
         tabBarActiveTintColor: Colors.primaryDark, // cyan-600
         tabBarInactiveTintColor: Colors.textLight, // gray-500
         tabBarStyle: {
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          position: 'absolute',
+          backgroundColor: Colors.white,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 90 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 12,
+          height: Platform.OS === 'ios' ? 96 : 76,
+          paddingBottom: Platform.OS === 'ios' ? 32 : 16,
           paddingTop: 8,
-          elevation: 8,
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: -2 },
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '600',
           marginTop: 4,
-          marginBottom: 2,
+          marginBottom: Platform.OS === 'ios' ? 4 : 2,
         },
         tabBarIconStyle: {
-          marginTop: 5,
+          marginTop: 4,
         },
       }}
     >

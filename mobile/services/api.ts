@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { API_CONFIG } from '../constants/config';
 import { showError } from '../utils/toast';
 import { formatApiError } from '../utils/errorHandler';
+import i18n from './i18n';
 
 /**
  * Axios instance для работы с REST API
@@ -89,7 +90,7 @@ api.interceptors.response.use(
           // Нет refresh token - требуется повторный вход
           await clearTokens();
           if (!originalRequest.skipErrorToast) {
-            showError('Сессия истекла. Пожалуйста, войдите снова');
+            showError(i18n.t('errors.sessionExpired'));
           }
           return Promise.reject(error);
         }
@@ -117,7 +118,7 @@ api.interceptors.response.use(
         // Refresh не удался - очищаем токены
         await clearTokens();
         if (!originalRequest.skipErrorToast) {
-          showError('Сессия истекла. Пожалуйста, войдите снова');
+          showError(i18n.t('errors.sessionExpired'));
         }
         return Promise.reject(refreshError);
       }
@@ -167,6 +168,19 @@ export const getAccessToken = async (): Promise<string | null> => {
   } catch (error) {
     console.error('Error getting access token:', error);
     return null;
+  }
+};
+
+/**
+ * Синтез речи для китайского текста
+ */
+export const synthesizeSpeech = async (text: string): Promise<{ audioUrl: string; cached: boolean }> => {
+  try {
+    const { data } = await api.post('/tts/synthesize', { text });
+    return data;
+  } catch (error) {
+    console.error('TTS synthesis failed:', error);
+    throw error;
   }
 };
 

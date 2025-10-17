@@ -6,6 +6,7 @@ import axios from 'axios';
 import { API_CONFIG } from '../constants/config';
 import { showError } from '../utils/toast';
 import { formatGraphQLError } from '../utils/errorHandler';
+import i18n from './i18n';
 
 /**
  * Apollo Client для работы с GraphQL API
@@ -116,7 +117,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
                 await SecureStore.deleteItemAsync('refreshToken');
                 
                 if (!context.skipErrorToast) {
-                  showError('Сессия истекла. Пожалуйста, войдите снова');
+                  showError(i18n.t('errors.sessionExpired'));
                 }
                 
                 observer.error(refreshError);
@@ -139,7 +140,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
     console.error(`[Network error]: ${networkError}`);
     const context = operation.getContext();
     if (!context.skipErrorToast) {
-      showError('Ошибка сети. Проверьте подключение к интернету');
+      showError(i18n.t('errors.networkConnectionError'));
     }
   }
 });

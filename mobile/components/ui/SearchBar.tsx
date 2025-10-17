@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TextInput, View, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/Colors';
 
 interface SearchBarProps {
@@ -13,10 +14,13 @@ interface SearchBarProps {
 export const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChangeText,
-  placeholder = 'Поиск...',
+  placeholder,
   onSubmitEditing,
 }) => {
+  const { t } = useTranslation();
   const [isFocused, setIsFocused] = useState(false);
+  
+  const placeholderText = placeholder || t('search.searchPlaceholder');
 
   return (
     <View
@@ -34,7 +38,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+        placeholder={placeholderText}
         placeholderTextColor={Colors.textLight}
         onSubmitEditing={onSubmitEditing}
         onFocus={() => setIsFocused(true)}
@@ -54,8 +58,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.border,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 16, // px-4
+    paddingVertical: 12, // py-3
   },
   containerFocused: {
     borderWidth: 2,

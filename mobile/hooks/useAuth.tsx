@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { useTranslation } from 'react-i18next';
 import { api, saveTokens, clearTokens, rateLimits } from '../services/api';
 import { User, LoginInput, RegisterInput, AuthResponse } from '../types/api.types';
 import { getErrorMessage } from '../utils/errorHandler';
@@ -29,6 +30,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rateLimitsInfo, setRateLimitsInfo] = useState<RateLimits>({
@@ -82,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: any) {
       console.error('Login error:', error);
       const message = getErrorMessage(error);
-      showError(message, 'Ошибка входа');
+      showError(message, t('errors.loginError'));
       throw new Error(message);
     }
   };
@@ -100,7 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: any) {
       console.error('Register error:', error);
       const message = getErrorMessage(error);
-      showError(message, 'Ошибка регистрации');
+      showError(message, t('errors.registerError'));
       throw new Error(message);
     }
   };

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, Animated } from 'react-native';
 import { Portal, Dialog, Text, RadioButton, Button, ActivityIndicator, Divider } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, gql } from '@apollo/client';
@@ -40,6 +40,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [slideAnim] = useState(new Animated.Value(0));
 
   const { data, loading, refetch } = useQuery(GET_MY_COLLECTIONS, {
     skip: !visible,
@@ -72,6 +73,23 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
 
   const collections = data?.myCollections || [];
 
+  // Анимация появления/скрытия модального окна
+  useEffect(() => {
+    if (visible) {
+      Animated.timing(slideAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible, slideAnim]);
+
   const handleAdd = () => {
     if (!selectedCollectionId) {
       showError(t('collections.selectCollection'));
@@ -88,10 +106,16 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
     });
   };
 
+  const translateY = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [300, 0], // Начинаем за экраном, заканчиваем на позиции 0
+  });
+
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
-        <Dialog.Title>{t('character.addToCollection')}</Dialog.Title>
+        <Animated.View style={[styles.dialogContent, { transform: [{ translateY }] }]}>
+          <Dialog.Title>{t('character.addToCollection')}</Dialog.Title>
         <Dialog.Content>
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -134,6 +158,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
             {t('common.save')}
           </Button>
         </Dialog.Actions>
+        </Animated.View>
       </Dialog>
     </Portal>
   );
@@ -142,6 +167,9 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
 const styles = StyleSheet.create({
   dialog: {
     maxHeight: '80%',
+  },
+  dialogContent: {
+    // Стили для анимированного контента
   },
   loadingContainer: {
     padding: 24,

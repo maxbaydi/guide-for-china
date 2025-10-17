@@ -7,6 +7,7 @@ import { CharacterAnalysis } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AddToCollectionModal } from '../../components/AddToCollectionModal';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Helper to assign colors to characters
 const getCharColor = (index: number) => {
@@ -21,6 +22,7 @@ export default function AnalyzeResultsScreen() {
     results: string;
     originalText?: string;
   }>();
+  const insets = useSafeAreaInsets();
   
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export default function AnalyzeResultsScreen() {
   }
 
   return (
-    <>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: t('analyze.results'),
@@ -76,7 +78,10 @@ export default function AnalyzeResultsScreen() {
           ) : null,
         }}
       />
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
+      >
         <Text style={styles.statsText}>
           {t('analyze.charactersFound', { count: analysisData.length })}
         </Text>
@@ -148,7 +153,7 @@ export default function AnalyzeResultsScreen() {
           onSuccess={handleAddSuccess}
         />
       )}
-    </>
+    </SafeAreaView>
   );
 }
 

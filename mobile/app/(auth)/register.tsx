@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import { Text, HelperText } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/Colors';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { saveLanguage } from '../../services/i18n';
+import { TextInput } from '../../components/ui/TextInput';
+import { CustomButton } from '../../components/ui/Button';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const schema = z.object({
   email: z.string().email('errors.invalidEmail'),
@@ -55,11 +58,21 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardContainer}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text variant="headlineLarge" style={styles.title}>
+              {t('auth.registerTitle')}
+            </Text>
+            <Text variant="bodyLarge" style={styles.subtitle}>
+              {t('app.description')}
+            </Text>
+          </View>
+          
           <View style={styles.languageButtons}>
             <TouchableOpacity 
               style={[styles.langButton, i18n.language === 'ru' && styles.langButtonActive]}
@@ -74,41 +87,65 @@ export default function RegisterScreen() {
               <Text style={[styles.langButtonText, i18n.language === 'zh' && styles.langButtonTextActive]}>中</Text>
             </TouchableOpacity>
           </View>
-          
-          <View style={styles.header}>
-            <Text variant="headlineLarge" style={styles.title}>
-              {t('auth.registerTitle')}
-            </Text>
-            <Text variant="bodyLarge" style={styles.subtitle}>
-              {t('app.description')}
-            </Text>
-          </View>
 
           <Controller control={control} name="email" render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput label={t('auth.email')} value={value} onBlur={onBlur} onChangeText={onChange} error={!!errors.email} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput 
+                label={t('auth.email')} 
+                value={value} 
+                onChangeText={onChange} 
+                error={!!errors.email}
+                errorMessage={errors.email ? t(errors.email.message as string) : undefined}
+                keyboardType="email-address" 
+                autoCapitalize="none" 
+              />
           )} />
-          {errors.email && <HelperText type="error">{t(errors.email.message as string)}</HelperText>}
           
           <Controller control={control} name="username" render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput label={t('auth.username')} value={value} onBlur={onBlur} onChangeText={onChange} error={!!errors.username} autoCapitalize="none" />
+            <TextInput 
+              label={t('auth.username')} 
+              value={value} 
+              onChangeText={onChange} 
+              error={!!errors.username}
+              errorMessage={errors.username ? t(errors.username.message as string) : undefined}
+              autoCapitalize="none" 
+            />
           )} />
-          {errors.username && <HelperText type="error">{t(errors.username.message as string)}</HelperText>}
 
           <Controller control={control} name="password" render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput label={t('auth.password')} value={value} onBlur={onBlur} onChangeText={onChange} secureTextEntry={!showPassword} error={!!errors.password} right={<TextInput.Icon icon={showPassword ? 'eye-off' : 'eye'} onPress={() => setShowPassword(!showPassword)} />} />
+            <TextInput 
+              label={t('auth.password')} 
+              value={value} 
+              onChangeText={onChange} 
+              secureTextEntry={!showPassword} 
+              error={!!errors.password}
+              errorMessage={errors.password ? t(errors.password.message as string) : undefined}
+              rightIcon={showPassword ? 'eye-off' : 'eye'} 
+              onRightIconPress={() => setShowPassword(!showPassword)} 
+            />
           )} />
-          {errors.password && <HelperText type="error">{t(errors.password.message as string)}</HelperText>}
           
           <Controller control={control} name="confirmPassword" render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput label={t('auth.confirmPassword')} value={value} onBlur={onBlur} onChangeText={onChange} secureTextEntry={!showPassword} error={!!errors.confirmPassword} />
+            <TextInput 
+              label={t('auth.confirmPassword')} 
+              value={value} 
+              onChangeText={onChange} 
+              secureTextEntry={!showPassword} 
+              error={!!errors.confirmPassword}
+              errorMessage={errors.confirmPassword ? t(errors.confirmPassword.message as string) : undefined}
+            />
           )} />
-          {errors.confirmPassword && <HelperText type="error">{t(errors.confirmPassword.message as string)}</HelperText>}
 
           {serverError && <HelperText type="error" visible={!!serverError}>{serverError}</HelperText>}
 
-          <Button onPress={handleSubmit(handleRegister)} loading={isLoading} disabled={isLoading} mode="contained" style={styles.button} labelStyle={styles.buttonLabel}>
+          <CustomButton 
+            variant="primary"
+            onPress={handleSubmit(handleRegister)} 
+            loading={isLoading} 
+            disabled={isLoading} 
+            style={styles.button}
+          >
             {t('auth.registerButton')}
-          </Button>
+          </CustomButton>
           
           <View style={styles.footer}>
             <Link href="/(auth)/login" asChild>
@@ -120,6 +157,7 @@ export default function RegisterScreen() {
           </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -127,6 +165,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -163,9 +204,9 @@ const styles = StyleSheet.create({
   },
   languageButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   langButton: {
     paddingHorizontal: 12,

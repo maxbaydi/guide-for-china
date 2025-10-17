@@ -3,11 +3,14 @@ import { View, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useMutation, gql } from '@apollo/client';
-import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import { Text, HelperText } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Colors } from '../../constants/Colors';
+import { TextInput } from '../../components/ui/TextInput';
+import { CustomButton } from '../../components/ui/Button';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CREATE_COLLECTION = gql`
   mutation CreateCollection($name: String!, $icon: String) {
@@ -29,6 +32,7 @@ type FormData = z.infer<typeof schema>;
 export default function CreateCollectionScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [createCollection, { loading }] = useMutation(CREATE_COLLECTION, {
     refetchQueries: ['GetMyCollections'],
@@ -48,9 +52,9 @@ export default function CreateCollectionScreen() {
   };
   
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <Stack.Screen options={{ title: t('collections.createNew'), headerShown: true }} />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <Text variant="headlineLarge" style={styles.title}>{t('collections.newCollection')}</Text>
       </View>
       
@@ -61,13 +65,12 @@ export default function CreateCollectionScreen() {
           <TextInput
             label={t('collections.nameLabel')}
             value={value}
-            onBlur={onBlur}
             onChangeText={onChange}
             error={!!errors.name}
+            errorMessage={errors.name ? t(errors.name.message as string) : undefined}
           />
         )}
       />
-      {errors.name && <HelperText type="error">{t(errors.name.message as string)}</HelperText>}
 
       <Controller
         control={control}
@@ -76,34 +79,33 @@ export default function CreateCollectionScreen() {
           <TextInput
             label={t('collections.iconLabel')}
             value={value}
-            onBlur={onBlur}
             onChangeText={onChange}
             error={!!errors.icon}
+            errorMessage={errors.icon ? t(errors.icon.message as string) : undefined}
             maxLength={2}
           />
         )}
       />
-      {errors.icon && <HelperText type="error">{t(errors.icon.message as string)}</HelperText>}
 
       <View style={styles.buttonRow}>
-        <Button 
-          mode="outlined" 
+        <CustomButton 
+          variant="outlined" 
           onPress={() => router.back()}
           style={styles.flexButton}
         >
           {t('common.cancel')}
-        </Button>
-        <Button 
-          mode="contained" 
+        </CustomButton>
+        <CustomButton 
+          variant="primary" 
           onPress={handleSubmit(onSubmit)}
           loading={loading}
           disabled={loading}
           style={styles.flexButton}
         >
           {t('common.create')}
-        </Button>
+        </CustomButton>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   header: {
-      paddingTop: 32,
+      // paddingTop убран - используется insets.top + 24
   },
   title: {
     fontWeight: 'bold',

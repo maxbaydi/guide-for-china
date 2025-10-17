@@ -17,6 +17,7 @@ export default function AnalyzeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [text, setText] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   const analyzeMutation = useMutation({
     mutationFn: async (text: string) => {
@@ -97,8 +98,13 @@ export default function AnalyzeScreen() {
           placeholder={t('analyze.placeholder') || '我爱学中文...'}
           placeholderTextColor={Colors.textLight}
           multiline
-          style={styles.textInput}
+          style={[
+            styles.textInput,
+            isFocused && styles.textInputFocused
+          ]}
           maxLength={MAX_TEXT_LENGTH}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
 
         <Text 
@@ -177,6 +183,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     textAlignVertical: 'top',
+  },
+  textInputFocused: {
+    borderWidth: 2,
+    borderColor: Colors.primary, // cyan-500
   },
   characterCount: {
     fontSize: 12,

@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 12, // rounded-lg
     paddingVertical: 12,
     paddingHorizontal: 16,
     gap: 8,
@@ -73,7 +73,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   outlined: {
-    backgroundColor: Colors.border, // gray-200
+    backgroundColor: Colors.white, // белый фон для лучшего контраста
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   dashed: {
     backgroundColor: 'transparent',
