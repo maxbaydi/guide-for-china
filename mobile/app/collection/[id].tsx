@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { FlatList, View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
@@ -36,6 +36,7 @@ export default function CollectionDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
 
   const { data, loading, refetch, error } = useQuery(GET_COLLECTION, {
     variables: { id },
@@ -86,7 +87,7 @@ export default function CollectionDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: `${collection.icon || '📚'} ${collection.name}`,
@@ -96,7 +97,7 @@ export default function CollectionDetailScreen() {
       <FlatList
         data={collection.items.filter((item: CollectionItem) => item.character)}
         keyExtractor={(item: CollectionItem) => item.characterId}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 24 }]}
         onRefresh={refetch}
         refreshing={loading}
         ListEmptyComponent={

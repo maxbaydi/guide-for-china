@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
+import { TtsModule } from './tts/tts.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -28,6 +29,7 @@ import { HealthController } from './health.controller';
     // Feature modules
     AuthModule,
     DictionaryModule,
+    TtsModule,
   ],
   controllers: [HealthController],
 })

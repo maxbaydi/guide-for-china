@@ -284,3 +284,4 @@ if (require.main === module) {
 }
 
 export { getDatabaseStats, validatePinyinQuality, printReport };
+

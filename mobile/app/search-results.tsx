@@ -5,6 +5,7 @@ import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '../services/api';
 import { Character } from '../types/api.types';
@@ -18,6 +19,7 @@ export default function SearchResultsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { query } = useLocalSearchParams<{ query: string }>();
+  const insets = useSafeAreaInsets();
 
   const {
     data: searchResults,
@@ -62,7 +64,7 @@ export default function SearchResultsScreen() {
   };
   
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -74,7 +76,7 @@ export default function SearchResultsScreen() {
       <FlatList
         data={searchResults || []}
         keyExtractor={(item, index) => `${item.id}-${index}`}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingTop: insets.top + 24 }]}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -108,7 +110,7 @@ export default function SearchResultsScreen() {
           />
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -119,6 +121,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 24,
+    // paddingTop убран - используется insets.top + 24
     gap: 8,
     paddingBottom: 120,
   },

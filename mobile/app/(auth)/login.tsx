@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import { Text, HelperText } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/Colors';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { saveLanguage } from '../../services/i18n';
+import { TextInput } from '../../components/ui/TextInput';
+import { CustomButton } from '../../components/ui/Button';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const schema = z.object({
   email: z.string().email('errors.invalidEmail'),
@@ -50,11 +53,24 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardContainer}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <View style={styles.logo}>
+              <Text style={styles.logoText}>汉</Text>
+            </View>
+            <Text variant="headlineLarge" style={styles.title}>
+              HanGuide
+            </Text>
+            <Text variant="bodyLarge" style={styles.subtitle}>
+              {t('app.description')}
+            </Text>
+          </View>
+          
           <View style={styles.languageButtons}>
             <TouchableOpacity 
               style={[styles.langButton, i18n.language === 'ru' && styles.langButtonActive]}
@@ -70,18 +86,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
           
-          <View style={styles.header}>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>汉</Text>
-            </View>
-            <Text variant="headlineLarge" style={styles.title}>
-              HanGuide
-            </Text>
-            <Text variant="bodyLarge" style={styles.subtitle}>
-              {t('app.description')}
-            </Text>
-          </View>
-          
           <Controller
             control={control}
             name="email"
@@ -89,37 +93,31 @@ export default function LoginScreen() {
               <TextInput
                 label={t('auth.email')}
                 value={value}
-                onBlur={onBlur}
                 onChangeText={onChange}
                 error={!!errors.email}
+                errorMessage={errors.email ? t(errors.email.message as string) : undefined}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             )}
           />
-          {errors.email && <HelperText type="error">{t(errors.email.message as string)}</HelperText>}
           
           <Controller
             control={control}
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
-               <TextInput
+              <TextInput
                 label={t('auth.password')}
                 value={value}
-                onBlur={onBlur}
                 onChangeText={onChange}
                 secureTextEntry={!showPassword}
                 error={!!errors.password}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
+                errorMessage={errors.password ? t(errors.password.message as string) : undefined}
+                rightIcon={showPassword ? 'eye-off' : 'eye'}
+                onRightIconPress={() => setShowPassword(!showPassword)}
               />
             )}
           />
-           {errors.password && <HelperText type="error">{t(errors.password.message as string)}</HelperText>}
 
           {serverError && (
             <HelperText type="error" visible={!!serverError}>
@@ -127,16 +125,15 @@ export default function LoginScreen() {
             </HelperText>
           )}
 
-          <Button
+          <CustomButton
+            variant="primary"
             onPress={handleSubmit(handleLogin)}
             loading={isLoading}
             disabled={isLoading}
-            mode="contained"
             style={styles.button}
-            labelStyle={styles.buttonLabel}
           >
             {t('auth.loginButton')}
-          </Button>
+          </CustomButton>
           
           <View style={styles.footer}>
             <Link href="/(auth)/register" asChild>
@@ -148,6 +145,7 @@ export default function LoginScreen() {
           </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -155,6 +153,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -204,9 +205,9 @@ const styles = StyleSheet.create({
   },
   languageButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   langButton: {
     paddingHorizontal: 12,

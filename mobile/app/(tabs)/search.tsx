@@ -105,7 +105,7 @@ export default function SearchScreen() {
         <View>
           <Text style={styles.headerGreeting}>{t('search.greeting')}</Text>
           <Text style={styles.headerName}>
-            {user?.username || 'Test User'}
+            {user?.username || t('common.testUser')}
           </Text>
         </View>
         <Avatar 

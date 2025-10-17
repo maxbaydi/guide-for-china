@@ -1,0 +1,79 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build application
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /app
+
+# Create directories for Piper TTS (will be installed later)
+RUN mkdir -p /app/piper/models /tmp/tts
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm install --omit=dev
+
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+
+# Create a mock piper binary for testing
+RUN cat > /app/piper/piper <<'EOF'
+#!/bin/sh
+# Mock Piper TTS for testing
+# First argument is text (from stdin), second is output file path
+while read -r line; do
+  echo "Mock TTS generating: $line" >&2
+done
+
+# Parse arguments to find output file
+output_file=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --output_file)
+      output_file="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+# Create a minimal valid WAV file
+if [ -n "$output_file" ]; then
+  # WAV header (44 bytes) + minimal silence
+  printf "RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x44\xac\x00\x00\x88X\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00" > "$output_file"
+  echo "Created: $output_file" >&2
+fi
+
+exit 0
+EOF
+RUN sed -i 's/\r$//' /app/piper/piper && chmod +x /app/piper/piper
+
+# Expose port
+EXPOSE 4003
+
+# Start application
+CMD ["npm", "run", "start:prod"]

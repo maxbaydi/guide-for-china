@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ScrollView, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { ActivityIndicator, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api } from '../../services/api';
+import { useAudioPlayer } from 'expo-audio';
+import { api, synthesizeSpeech } from '../../services/api';
 import { Character, SimilarWord, ReverseTranslation } from '../../types/api.types';
 import { Colors } from '../../constants/Colors';
 import { Card } from '../../components/ui/Card';
@@ -15,6 +16,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { AddToCollectionModal } from '../../components/AddToCollectionModal';
 import { DefinitionGroup } from '../../components/character/DefinitionGroup';
 import { ExampleItem } from '../../components/character/ExampleItem';
+import { showError } from '../../utils/toast';
 
 export default function CharacterDetailScreen() {
   const { t } = useTranslation();
@@ -22,6 +24,9 @@ export default function CharacterDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<'definitions' | 'examples' | 'similar' | 'reverse'>('definitions');
   const [modalVisible, setModalVisible] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const insets = useSafeAreaInsets();
+  const player = useAudioPlayer();
 
   // Основные данные иероглифа
   const { data: character, isLoading } = useQuery<Character>({
@@ -36,7 +41,7 @@ export default function CharacterDetailScreen() {
   });
 
   // Похожие слова - загружаются только при открытии вкладки
-  const { data: similarWords } = useQuery<SimilarWord[]>({
+  const { data: similarWords, isLoading: isSimilarLoading } = useQuery<SimilarWord[]>({
     queryKey: ['similar-words', character?.simplified],
     queryFn: async () => {
       const { data } = await api.get(`/dictionary/character/${id}/similar`, {
@@ -48,7 +53,7 @@ export default function CharacterDetailScreen() {
   });
 
   // Обратные переводы - загружаются только при открытии вкладки
-  const { data: reverseTranslations } = useQuery<ReverseTranslation[]>({
+  const { data: reverseTranslations, isLoading: isReverseLoading } = useQuery<ReverseTranslation[]>({
     queryKey: ['reverse-translations', character?.simplified],
     queryFn: async () => {
       const { data } = await api.get(`/dictionary/character/${id}/reverse`, {
@@ -61,6 +66,29 @@ export default function CharacterDetailScreen() {
 
   const handleAddSuccess = (collectionName: string) => {
     // Toast уже показан в AddToCollectionModal
+  };
+
+  const handlePlayAudio = async () => {
+    if (!character?.simplified || player.playing || isLoadingAudio) {
+      return;
+    }
+
+    try {
+      setIsLoadingAudio(true);
+      
+      // Синтезировать аудио
+      const { audioUrl } = await synthesizeSpeech(character.simplified);
+      
+      // Воспроизвести через новый API expo-audio
+      player.replace(audioUrl);
+      player.play();
+
+    } catch (error) {
+      console.error('Audio playback failed:', error);
+      showError('Не удалось воспроизвести аудио');
+    } finally {
+      setIsLoadingAudio(false);
+    }
   };
 
   const HeaderRight = () => (
@@ -91,24 +119,35 @@ export default function CharacterDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: t('character.details'),
           headerShown: true,
           headerRight: () => <HeaderRight />,
+          headerStyle: {
+            backgroundColor: Colors.white,
+          },
+          headerTintColor: Colors.text,
+          headerTitleStyle: {
+            fontWeight: '600',
+          },
         }}
       />
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
+      >
         <Card style={styles.characterCard}>
           <View style={styles.characterCardContent}>
             <Text style={styles.character}>{character.simplified}</Text>
             <View style={styles.pinyinRow}>
               <Text style={styles.pinyin}>{character.pinyin}</Text>
               <IconButton
-                icon="volume-high"
-                onPress={() => console.log('Play audio')}
+                icon={isLoadingAudio ? "loading" : player.playing ? "pause" : "volume-high"}
+                onPress={handlePlayAudio}
                 size={20}
+                disabled={isLoadingAudio || player.playing}
               />
             </View>
           </View>
@@ -206,7 +245,11 @@ export default function CharacterDetailScreen() {
 
             {activeTab === 'similar' && (
               <View style={styles.similarList}>
-                {similarWords && similarWords.length > 0 ? (
+                {isSimilarLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={Colors.primary} />
+                  </View>
+                ) : similarWords && similarWords.length > 0 ? (
                   similarWords.map((word, idx) => (
                     <Card 
                       key={`${word.id}-${idx}`}
@@ -232,7 +275,11 @@ export default function CharacterDetailScreen() {
 
             {activeTab === 'reverse' && (
               <View style={styles.reverseList}>
-                {reverseTranslations && reverseTranslations.length > 0 ? (
+                {isReverseLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={Colors.primary} />
+                  </View>
+                ) : reverseTranslations && reverseTranslations.length > 0 ? (
                   reverseTranslations.map((trans, idx) => (
                     <View key={`reverse-${idx}`}>
                       <View style={styles.reverseItem}>
@@ -280,6 +327,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 24,
+    // paddingTop убран - используется headerShown: true
     gap: 24,
     paddingBottom: 120,
   },
@@ -439,5 +487,11 @@ const styles = StyleSheet.create({
   reversePinyin: {
     fontSize: 14,
     color: Colors.textLight,
+  },
+  loadingContainer: {
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 120,
   },
 });

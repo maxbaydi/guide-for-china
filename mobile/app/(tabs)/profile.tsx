@@ -2,13 +2,14 @@ import { ScrollView, View, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, gql } from '@apollo/client';
-import { Button } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/Colors';
 import { Avatar } from '../../components/ui/Avatar';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Card } from '../../components/ui/Card';
+import { CustomButton } from '../../components/ui/Button';
 import { useEffect } from 'react';
+import { Settings } from 'lucide-react-native';
 
 const GET_MY_STATS = gql`
   query GetMyStats {
@@ -70,7 +71,7 @@ export default function ProfileScreen() {
           size={80}
         />
         <Text style={styles.userName}>
-          {user?.username || 'Test User'}
+          {user?.username || t('common.testUser')}
         </Text>
         <Text style={styles.userEmail}>
           {user?.email}
@@ -114,26 +115,21 @@ export default function ProfileScreen() {
       </Card>
       
       <View style={styles.actions}>
-        <Button 
-            mode="contained" 
+        <CustomButton 
+            variant="secondary" 
             onPress={() => router.push('/settings')} 
             style={styles.actionButton}
-            contentStyle={{ height: 48 }}
-            labelStyle={styles.actionButtonLabel}
-            icon="cog-outline"
+            icon={<Settings size={20} color={Colors.white} />}
         >
           {t('profile.settings')}
-        </Button>
-         <Button 
-            mode="outlined" 
+        </CustomButton>
+         <CustomButton 
+            variant="outlined" 
             onPress={handleLogout}
-            textColor={Colors.primary}
             style={styles.logoutButton}
-            contentStyle={{ height: 48 }}
-            labelStyle={styles.buttonLabel}
         >
           {t('auth.logout')}
-        </Button>
+        </CustomButton>
       </View>
     </ScrollView>
   );
@@ -214,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionButton: {
-    backgroundColor: Colors.white,
+    // Убираем переопределение фона, чтобы использовался стиль из variant="secondary"
   },
   actionButtonLabel: {
     color: Colors.text,

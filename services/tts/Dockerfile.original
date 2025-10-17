@@ -1,0 +1,60 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build application
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache openssl libc6-compat wget tar curl
+
+WORKDIR /app
+
+# Install Piper TTS - using a more reliable approach
+RUN mkdir -p /app/piper/models && \
+    cd /tmp && \
+    wget -O piper.tar.gz https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_linux_x86_64.tar.gz && \
+    tar -xzf piper.tar.gz && \
+    cp piper/piper /app/piper/ && \
+    chmod +x /app/piper/piper && \
+    rm -rf /tmp/piper* && \
+    cd /app
+
+# Download Chinese model
+RUN cd /app/piper/models && \
+    wget -O zh_CN-huayan-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/zh_CN-huayan-medium.onnx && \
+    wget -O zh_CN-huayan-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/zh_CN-huayan-medium.onnx.json
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm install --omit=dev
+
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+
+# Create temp directory for audio generation
+RUN mkdir -p /tmp/tts
+
+# Expose port
+EXPOSE 4003
+
+# Start application
+CMD ["npm", "run", "start:prod"]

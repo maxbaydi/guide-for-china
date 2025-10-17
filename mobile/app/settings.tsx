@@ -3,13 +3,16 @@ import { ScrollView, View, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Text, Card, Switch, TextInput, Button, SegmentedButtons } from 'react-native-paper';
+import { Text, Card, Switch, SegmentedButtons } from 'react-native-paper';
 import { useMutation, gql } from '@apollo/client';
 import { useAuth } from '../hooks/useAuth';
 import { Colors } from '../constants/Colors';
 import { showSuccess, showError } from '../utils/toast';
 import { getErrorMessage } from '../utils/errorHandler';
 import { saveLanguage } from '../services/i18n';
+import { TextInput } from '../components/ui/TextInput';
+import { CustomButton } from '../components/ui/Button';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -30,6 +33,7 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   
   // Profile fields
   const [username, setUsername] = useState(user?.username || '');
@@ -191,8 +195,13 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <Stack.Screen options={{ title: t('profile.settings'), headerShown: true }} />
+      
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
+      >
       
       {/* Profile Section */}
       <View style={styles.sectionHeader}>
@@ -205,24 +214,20 @@ export default function SettingsScreen() {
             label={t('auth.username')}
             value={username}
             onChangeText={setUsername}
-            mode="outlined"
-            style={styles.input}
             autoCapitalize="none"
           />
           <Text variant="bodySmall" style={styles.helperText}>
             {t('settings.usernameHelperText')}
           </Text>
-          <Button 
-            mode="contained" 
+          <CustomButton 
+            variant="primary" 
             onPress={handleSaveProfile}
             loading={updatingProfile}
             disabled={updatingProfile || username === user?.username}
             style={styles.button}
-            contentStyle={{ height: 48 }}
-            labelStyle={styles.buttonLabel}
           >
             {t('common.save')}
-          </Button>
+          </CustomButton>
         </Card.Content>
       </Card>
 
@@ -237,40 +242,32 @@ export default function SettingsScreen() {
             label={t('settings.currentPassword')}
             value={currentPassword}
             onChangeText={setCurrentPassword}
-            mode="outlined"
             secureTextEntry
-            style={styles.input}
           />
           <TextInput
             label={t('settings.newPassword')}
             value={newPassword}
             onChangeText={setNewPassword}
-            mode="outlined"
             secureTextEntry
-            style={styles.input}
           />
           <TextInput
             label={t('settings.confirmPassword')}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            mode="outlined"
             secureTextEntry
-            style={styles.input}
           />
           <Text variant="bodySmall" style={styles.passwordHint}>
             {t('errors.passwordRequirements')}
           </Text>
-          <Button 
-            mode="contained" 
+          <CustomButton 
+            variant="primary" 
             onPress={handleChangePassword}
             loading={changingPassword}
             disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
             style={styles.button}
-            contentStyle={{ height: 48 }}
-            labelStyle={styles.buttonLabel}
           >
             {t('settings.changePassword')}
-          </Button>
+          </CustomButton>
         </Card.Content>
       </Card>
 
@@ -317,6 +314,7 @@ export default function SettingsScreen() {
         </View>
       </Card>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
