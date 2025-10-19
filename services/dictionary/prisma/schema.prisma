@@ -17,7 +17,7 @@ model Character {
   pinyin       String?
   hskLevel     Int?     // HSK level (1-6)
   frequency    Int?     // Frequency rank
-  searchVector Unsupported("tsvector")?
+  search_vector Unsupported("tsvector")?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
@@ -66,7 +66,7 @@ model Phrase {
   chinese      String   @db.Text
   pinyin       String?  @db.Text
   context      String?
-  searchVector Unsupported("tsvector")?
+  search_vector Unsupported("tsvector")?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   

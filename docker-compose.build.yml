@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pg_jieba extension
+  postgres:
+    build:
+      context: ./infrastructure/postgres
+      dockerfile: Dockerfile
+    image: guide-for-china-mobile-postgres:latest
+    container_name: guide-postgres-build
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    networks:
+      - guide-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    image: guide-for-china-mobile-user:latest
+    container_name: guide-user-service-build
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+      PORT: 4002
+      NODE_ENV: production
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DICTIONARY_SERVICE_HOST: ${DICTIONARY_SERVICE_HOST}
+      DICTIONARY_SERVICE_PORT: ${DICTIONARY_SERVICE_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    networks:
+      - guide-network
+
+  # Dictionary Service
+  dictionary-service:
+    build:
+      context: ./services/dictionary
+      dockerfile: Dockerfile
+    image: guide-for-china-mobile-dictionary:latest
+    container_name: guide-dictionary-service-build
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: 4001
+      NODE_ENV: production
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    networks:
+      - guide-network
+
+  # TTS Service
+  tts-service:
+    build:
+      context: ./services/tts
+      dockerfile: Dockerfile
+    image: guide-for-china-mobile-tts:latest
+    container_name: guide-tts-service-build
+    environment:
+      PORT: 4003
+      NODE_ENV: production
+    networks:
+      - guide-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    image: guide-for-china-mobile-api-gateway:latest
+    container_name: guide-api-gateway-build
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      DICTIONARY_SERVICE_URL: ${DICTIONARY_SERVICE_URL}
+      TTS_SERVICE_URL: ${TTS_SERVICE_URL}
+      REDIS_URL: ${REDIS_URL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+    networks:
+      - guide-network
+
+networks:
+  guide-network:
+    driver: bridge
+

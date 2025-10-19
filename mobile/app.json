@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hanguide.app"
+      "bundleIdentifier": "com.hanguide.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,12 +26,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.hanguide.app",
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "statusBar": {
-        "translucent": true,
-        "backgroundColor": "transparent"
-      }
+      "usesCleartextTraffic": false,
+      "networkSecurityConfig": "./network_security_config.xml"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,7 +41,17 @@
       ],
       "expo-secure-store",
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "buildArchs": ["arm64-v8a"]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -52,10 +61,8 @@
         "origin": false
       },
       "eas": {
-        "projectId": "hanguide-mobile"
-      },
-      "apiBaseUrl": "http://192.168.31.88:4000/api/v1",
-      "graphqlUrl": "http://192.168.31.88:4002/graphql"
+        "projectId": "3a2bb0fa-379c-48de-b0e6-082c37a1a8d5"
+      }
     }
   }
 }

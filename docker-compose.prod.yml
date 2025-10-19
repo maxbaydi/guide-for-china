@@ -1,0 +1,179 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pg_jieba extension
+  postgres:
+    image: geronimodid/guide-for-china-mobile-postgres:latest
+    container_name: guide-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - guide-network
+    restart: always
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: guide-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - guide-network
+    command: redis-server --appendonly yes
+    restart: always
+
+  # MinIO for file storage
+  minio:
+    image: minio/minio:latest
+    container_name: guide-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - guide-network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # User Service
+  user-service:
+    image: geronimodid/guide-for-china-mobile-user:latest
+    container_name: guide-user-service
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+      PORT: 4002
+      NODE_ENV: production
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DICTIONARY_SERVICE_HOST: dictionary-service
+      DICTIONARY_SERVICE_PORT: 4001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "4002:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - guide-network
+    restart: always
+
+  # Dictionary Service
+  dictionary-service:
+    image: geronimodid/guide-for-china-mobile-dictionary:latest
+    container_name: guide-dictionary-service
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: 4001
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - guide-network
+    restart: always
+
+  # TTS Service
+  tts-service:
+    image: geronimodid/guide-for-china-mobile-tts:latest
+    container_name: guide-tts-service
+    environment:
+      PORT: 4003
+      NODE_ENV: production
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: tts-audio
+      MINIO_PUBLIC_URL: https://mypns.com:9000
+    ports:
+      - "4003:4003"
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - guide-network
+    restart: always
+
+  # API Gateway
+  api-gateway:
+    image: geronimodid/guide-for-china-mobile-api-gateway:latest
+    container_name: guide-api-gateway
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      USER_SERVICE_URL: http://user-service:4002
+      DICTIONARY_SERVICE_URL: http://dictionary-service:4001/
+      TTS_SERVICE_URL: http://tts-service:4003
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+    ports:
+      - "4000:4000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      dictionary-service:
+        condition: service_started
+      tts-service:
+        condition: service_started
+    networks:
+      - guide-network
+    restart: always
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  guide-network:
+    driver: bridge
+

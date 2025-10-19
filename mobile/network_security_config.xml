@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Настройки для production сервера с самоподписанным сертификатом -->
+    <domain-config cleartextTrafficPermitted="false">
+        <!-- Production сервер - доверяем самоподписанному сертификату -->
+        <domain includeSubdomains="true">mypns.com</domain>
+        <!-- Сохраняем IP адрес для обратной совместимости во время перехода -->
+        <domain includeSubdomains="true">81.177.136.22</domain>
+        <trust-anchors>
+            <!-- Доверяем системным CA (стандартные сертификаты) -->
+            <certificates src="system" />
+            <!-- Доверяем пользовательским CA (наш самоподписанный сертификат) -->
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Настройки для локальной разработки -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Localhost для эмулятора Android -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- Локальный сервер для разработки -->
+        <domain includeSubdomains="true">192.168.31.88</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+
+    <!-- Базовая конфигурация для всех остальных доменов - требуется HTTPS -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
+

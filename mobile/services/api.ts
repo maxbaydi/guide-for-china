@@ -18,6 +18,12 @@ export const api = axios.create({
   },
 });
 
+// Логирование всех запросов для отладки
+console.log('📡 API Client Configuration:');
+console.log('  Base URL:', API_CONFIG.BASE_URL);
+console.log('  Timeout:', API_CONFIG.TIMEOUT);
+console.log('  Self-signed certificate support: ENABLED via Network Security Config');
+
 // Request interceptor - добавление токена авторизации
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
@@ -26,12 +32,16 @@ api.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      
+      // Логируем запрос для отладки
+      console.log(`🌐 ${config.method?.toUpperCase()} ${config.url}`);
     } catch (error) {
       console.error('Error getting access token:', error);
     }
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -78,6 +88,23 @@ api.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean; skipErrorToast?: boolean };
+
+    // Детальное логирование ошибки для отладки
+    if (!error.response) {
+      console.error('❌ Network Error:', {
+        message: error.message,
+        code: error.code,
+        url: originalRequest?.url,
+        baseURL: API_CONFIG.BASE_URL,
+      });
+      
+      // Специальное сообщение для SSL ошибок
+      if (error.message?.includes('SSL') || error.message?.includes('certificate')) {
+        console.error('🔒 SSL Certificate Error - Check Network Security Config');
+      }
+    } else {
+      console.error(`❌ HTTP ${error.response.status}:`, originalRequest?.url);
+    }
 
     // Если 401 и это не повторный запрос
     if (error.response?.status === 401 && !originalRequest._retry) {

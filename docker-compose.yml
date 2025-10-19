@@ -41,6 +41,28 @@ services:
       - guide-network
     command: redis-server --appendonly yes
 
+  # MinIO for file storage
+  minio:
+    image: minio/minio:latest
+    container_name: guide-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - guide-network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # pgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -114,6 +136,30 @@ services:
       - guide-network
     restart: unless-stopped
 
+  # TTS Service
+  tts-service:
+    build:
+      context: ./services/tts
+      dockerfile: Dockerfile
+    container_name: guide-tts-service
+    environment:
+      PORT: 4003
+      NODE_ENV: ${NODE_ENV:-development}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_BUCKET: tts-audio
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+    ports:
+      - "4003:4003"
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - guide-network
+    restart: unless-stopped
+
   # API Gateway
   api-gateway:
     build:
@@ -126,6 +172,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:4002/graphql}
       DICTIONARY_SERVICE_URL: ${DICTIONARY_SERVICE_URL:-http://dictionary-service:4001/}
+      TTS_SERVICE_URL: ${TTS_SERVICE_URL:-http://tts-service:4003}
       REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -140,6 +187,8 @@ services:
         condition: service_started
       dictionary-service:
         condition: service_started
+      tts-service:
+        condition: service_started
     networks:
       - guide-network
     restart: unless-stopped
@@ -148,6 +197,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  minio_data:
     driver: local
   pgadmin_data:
     driver: local

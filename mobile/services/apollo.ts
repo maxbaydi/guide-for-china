@@ -17,6 +17,11 @@ const httpLink = createHttpLink({
   uri: API_CONFIG.GRAPHQL_URL,
 });
 
+// Логирование конфигурации GraphQL
+console.log('🔗 GraphQL Client Configuration:');
+console.log('  GraphQL URL:', API_CONFIG.GRAPHQL_URL);
+console.log('  Self-signed certificate support: ENABLED via Network Security Config');
+
 // Флаг для предотвращения одновременных запросов на обновление токена
 let isRefreshing = false;
 let pendingRequests: Array<() => void> = [];
@@ -138,6 +143,19 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
 
   if (networkError) {
     console.error(`[Network error]: ${networkError}`);
+    
+    // Детальное логирование сетевой ошибки
+    console.error('❌ GraphQL Network Error Details:', {
+      message: networkError.message,
+      name: networkError.name,
+      url: API_CONFIG.GRAPHQL_URL,
+    });
+    
+    // Специальное сообщение для SSL ошибок
+    if (networkError.message?.includes('SSL') || networkError.message?.includes('certificate')) {
+      console.error('🔒 GraphQL SSL Certificate Error - Check Network Security Config');
+    }
+    
     const context = operation.getContext();
     if (!context.skipErrorToast) {
       showError(i18n.t('errors.networkConnectionError'));
