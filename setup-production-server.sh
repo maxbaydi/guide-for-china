@@ -85,3 +85,4 @@ echo -e "   ${YELLOW}cd mobile && eas build --platform android --profile product
 echo ""
 
 
+

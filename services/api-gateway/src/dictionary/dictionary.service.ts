@@ -102,7 +102,7 @@ export class DictionaryService {
       query AnalyzeText($text: String!) {
         analyzeText(text: $text) {
           position
-          character
+          word
           details {
             id
             simplified
