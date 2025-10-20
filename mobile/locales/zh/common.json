@@ -49,14 +49,17 @@
     "frequency": "频率",
     "definitions": "释义",
     "generalDef": "通用",
+    "noDefinitions": "暂无释义",
     "examples": "例句",
     "addToCollection": "添加到词集",
     "noExamples": "暂无例句",
     "noTranslation": "无翻译",
     "similarWords": "相似词",
+    "phrases": "短语",
     "reverseTranslations": "在俄语单词中",
     "noSimilarWords": "未找到相似词",
-    "noReverseTranslations": "未找到反向翻译"
+    "noReverseTranslations": "未找到反向翻译",
+    "noPhrases": "未找到短语"
   },
   "analyze": {
     "title": "文本分析",

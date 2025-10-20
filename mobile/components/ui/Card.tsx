@@ -12,6 +12,7 @@ interface CardProps {
   onPress?: () => void;
   style?: ViewStyle;
   variant?: CardVariant;
+  accentColor?: string;
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
@@ -21,6 +22,7 @@ export const Card: React.FC<CardProps> = ({
   onPress, 
   style,
   variant = 'standard',
+  accentColor,
 }) => {
   const { theme, shadows } = useTheme();
   const scale = useSharedValue(1);
@@ -42,7 +44,13 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const content = (
-    <View style={[styles.content]}>
+    <View style={[
+      styles.content,
+      accentColor ? { 
+        backgroundColor: `${accentColor}18`,
+        borderRadius: BorderRadius.xl,
+      } : undefined
+    ]}>
       {children}
     </View>
   );

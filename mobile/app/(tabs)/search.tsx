@@ -16,6 +16,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Spacing, BorderRadius } from '../../constants/Colors';
 import { api } from '../../services/api';
 import { Character } from '../../types/api.types';
+import { getFirstTranslation } from '../../utils/definitionParser';
 
 export default function SearchScreen() {
   const { t } = useTranslation();
@@ -177,9 +178,9 @@ export default function SearchScreen() {
                   )}
                 </View>
                 <View style={styles.wordOfTheDayTextColumn}>
-                  <Text style={[styles.wordOfTheDayTranslation, { color: theme.textInverse }]}>
+                  <Text style={[styles.wordOfTheDayTranslation, { color: theme.textInverse }]} numberOfLines={2}>
                     {wordOfTheDay.definitions && wordOfTheDay.definitions.length > 0
-                      ? wordOfTheDay.definitions[0].translation
+                      ? getFirstTranslation(wordOfTheDay.definitions)
                       : t('character.noTranslation')}
                   </Text>
                   {wordOfTheDay.examples && wordOfTheDay.examples.length > 0 && (

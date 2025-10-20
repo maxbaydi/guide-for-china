@@ -2,64 +2,41 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Example } from '../../types/api.types';
-import { Colors, CharacterColors } from '../../constants/Colors';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ExampleItemProps {
   example: Example;
-  highlightCharacter?: string; // Иероглиф для выделения
+  highlightCharacter?: string;
 }
 
 /**
- * Отображает пример использования иероглифа
- * с выделением искомого символа зеленым цветом
+ * Компонент для отображения примера использования иероглифа
+ * с подсветкой искомого иероглифа
  */
 export const ExampleItem: React.FC<ExampleItemProps> = ({ 
   example, 
   highlightCharacter 
 }) => {
-  /**
-   * Разбивает китайский текст на сегменты с выделением
-   */
+  const { theme } = useTheme();
+
+  // Функция для подсветки иероглифа в тексте
   const renderHighlightedText = (text: string, highlight?: string) => {
-    if (!highlight) {
-      return <Text style={styles.chinese}>{text}</Text>;
+    if (!highlight || !text.includes(highlight)) {
+      return <Text style={[styles.chinese, { color: theme.text }]}>{text}</Text>;
     }
 
-    const segments: { text: string; highlighted: boolean }[] = [];
-    let currentText = '';
-    
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      
-      // Проверяем совпадение с выделяемым символом
-      if (highlight && text.substr(i, highlight.length) === highlight) {
-        // Сохраняем накопленный текст
-        if (currentText) {
-          segments.push({ text: currentText, highlighted: false });
-          currentText = '';
-        }
-        // Добавляем выделенный символ
-        segments.push({ text: highlight, highlighted: true });
-        i += highlight.length - 1;
-      } else {
-        currentText += char;
-      }
-    }
-    
-    // Добавляем оставшийся текст
-    if (currentText) {
-      segments.push({ text: currentText, highlighted: false });
-    }
-
+    const parts = text.split(highlight);
     return (
-      <Text style={styles.chinese}>
-        {segments.map((segment, index) => (
-          <Text
-            key={index}
-            style={segment.highlighted ? styles.highlighted : undefined}
-          >
-            {segment.text}
-          </Text>
+      <Text style={[styles.chinese, { color: theme.text }]}>
+        {parts.map((part, index) => (
+          <React.Fragment key={index}>
+            {part}
+            {index < parts.length - 1 && (
+              <Text style={[styles.highlighted, { color: theme.primary }]}>
+                {highlight}
+              </Text>
+            )}
+          </React.Fragment>
         ))}
       </Text>
     );
@@ -67,45 +44,46 @@ export const ExampleItem: React.FC<ExampleItemProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Китайский текст с выделением */}
+      {/* Китайский текст с подсветкой */}
       {renderHighlightedText(example.chinese, highlightCharacter)}
-      
-      {/* Пиньинь (если есть) */}
+
+      {/* Пиньинь */}
       {example.pinyin && (
-        <Text style={styles.pinyin}>{example.pinyin}</Text>
+        <Text style={[styles.pinyin, { color: theme.textSecondary }]}>
+          {example.pinyin}
+        </Text>
       )}
-      
+
       {/* Русский перевод */}
-      <Text style={styles.russian}>{example.russian}</Text>
+      <Text style={[styles.russian, { color: theme.text }]}>
+        {example.russian}
+      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingVertical: 16,
     gap: 6,
   },
   chinese: {
     fontFamily: 'Noto Serif SC',
     fontSize: 18,
-    color: Colors.text,
-    lineHeight: 26,
+    fontWeight: '600',
+    lineHeight: 28,
+    letterSpacing: 0.5,
   },
   highlighted: {
-    color: CharacterColors.highlight,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   pinyin: {
     fontSize: 14,
-    color: CharacterColors.pinyin,
+    fontStyle: 'italic',
     lineHeight: 20,
   },
   russian: {
     fontSize: 16,
-    color: Colors.text,
     lineHeight: 24,
-    marginTop: 2,
   },
 });
-

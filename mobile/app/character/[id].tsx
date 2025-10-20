@@ -240,7 +240,7 @@ export default function CharacterDetailScreen() {
                 styles.tabButton,
                 { color: activeTab === 'reverse' ? theme.primary : theme.textSecondary }
               ]}>
-                {t('character.reverseTranslations')}
+                {t('character.phrases')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -262,7 +262,7 @@ export default function CharacterDetailScreen() {
                         highlightCharacter={character.simplified}
                       />
                       {idx < (character.examples?.length ?? 0) - 1 && (
-                        <Divider style={[styles.divider, { backgroundColor: theme.border }]} />
+                        <Divider style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />
                       )}
                     </View>
                   ))
@@ -317,19 +317,30 @@ export default function CharacterDetailScreen() {
                   reverseTranslations.map((trans, idx) => (
                     <View key={`reverse-${idx}`}>
                       <View style={styles.reverseItem}>
-                        <Text style={[styles.reverseRussian, { color: theme.text }]}>{trans.russian}</Text>
-                        <Text style={[styles.reverseChinese, { color: theme.text }]}>{trans.chinese}</Text>
+                        <Text style={[styles.reverseRussian, { color: theme.text }]}>
+                          {trans.russian}
+                        </Text>
+                        <View style={styles.arrowContainer}>
+                          <Text style={[styles.arrow, { color: theme.textSecondary }]}>→</Text>
+                        </View>
+                        <Text style={[styles.reverseChinese, { color: theme.text }]}>
+                          {trans.chinese}
+                        </Text>
                         {trans.pinyin && (
-                          <Text style={[styles.reversePinyin, { color: theme.textSecondary }]}>{trans.pinyin}</Text>
+                          <Text style={[styles.reversePinyin, { color: theme.textSecondary }]}>
+                            {trans.pinyin}
+                          </Text>
                         )}
                       </View>
                       {idx < reverseTranslations.length - 1 && (
-                        <Divider style={[styles.divider, { backgroundColor: theme.border }]} />
+                        <Divider style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />
                       )}
                     </View>
                   ))
                 ) : (
-                  <Text style={[styles.noExamplesText, { color: theme.textSecondary }]}>{t('character.noReverseTranslations')}</Text>
+                  <Text style={[styles.noExamplesText, { color: theme.textSecondary }]}>
+                    {t('character.noPhrases')}
+                  </Text>
                 )}
               </View>
             )}
@@ -454,7 +465,8 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   divider: {
-    // динамический цвет применяется через inline style
+    height: 1,
+    backgroundColor: '#E0E0E0',
   },
   examplesList: {
     gap: 0,
@@ -471,22 +483,34 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   reverseItem: {
-    paddingVertical: Spacing.md,
-    gap: Spacing.xs,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  arrowContainer: {
+    marginVertical: 4,
+  },
+  arrow: {
+    fontSize: 18,
+    fontWeight: '400',
   },
   reverseRussian: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '400',
     letterSpacing: 0.2,
+    lineHeight: 24,
   },
   reverseChinese: {
     fontFamily: 'Noto Serif SC',
-    fontSize: 20,
+    fontSize: 18,
+    fontWeight: '600',
     letterSpacing: 0.5,
+    lineHeight: 28,
   },
   reversePinyin: {
     fontSize: 14,
+    fontStyle: 'italic',
     letterSpacing: 0.2,
+    lineHeight: 20,
   },
   loadingContainer: {
     padding: 32,
