@@ -1,6 +1,22 @@
-version: '3.8'
-
 services:
+  # Nginx Reverse Proxy with HTTPS
+  nginx:
+    image: nginx:alpine
+    container_name: guide-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:443"  # Дополнительный порт для обхода внешнего nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - api-gateway
+    networks:
+      - guide-network
+    restart: always
+
   # PostgreSQL with pg_jieba extension
   postgres:
     image: geronimodid/guide-for-china-mobile-postgres:latest
@@ -10,8 +26,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
+    # Порт закрыт для безопасности. Для администрирования раскомментируйте:
+    # ports:
+    #   - "5433:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,8 +46,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: guide-redis
-    ports:
-      - "6379:6379"
+    # Порт закрыт для безопасности. Для администрирования раскомментируйте:
+    # ports:
+    #   - "6380:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -49,8 +71,10 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
+      # Открываем прямой доступ к MinIO для мобильного приложения
       - "9000:9000"
-      - "9001:9001"
+    expose:
+      - "9001"
     volumes:
       - minio_data:/data
     networks:
@@ -80,8 +104,8 @@ services:
       DICTIONARY_SERVICE_PORT: 4001
       REDIS_HOST: redis
       REDIS_PORT: 6379
-    ports:
-      - "4002:4002"
+    expose:
+      - "4002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,8 +125,8 @@ services:
       NODE_ENV: production
       REDIS_HOST: redis
       REDIS_PORT: 6379
-    ports:
-      - "4001:4001"
+    expose:
+      - "4001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -124,9 +148,9 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: tts-audio
-      MINIO_PUBLIC_URL: https://mypns.com:9000
-    ports:
-      - "4003:4003"
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+    expose:
+      - "4003"
     depends_on:
       minio:
         condition: service_healthy
@@ -142,7 +166,7 @@ services:
       PORT: 4000
       NODE_ENV: production
       CORS_ORIGIN: ${CORS_ORIGIN}
-      USER_SERVICE_URL: http://user-service:4002
+      USER_SERVICE_URL: http://user-service:4002/graphql
       DICTIONARY_SERVICE_URL: http://dictionary-service:4001/
       TTS_SERVICE_URL: http://tts-service:4003
       REDIS_URL: redis://redis:6379
@@ -150,8 +174,8 @@ services:
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     depends_on:
       redis:
         condition: service_healthy

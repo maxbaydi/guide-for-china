@@ -128,3 +128,4 @@ echo -e "${YELLOW}Note:${NC} Once DNS is fixed, the mobile app configuration"
 echo "will automatically use the domain name."
 echo ""
 
+

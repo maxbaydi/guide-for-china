@@ -30,3 +30,4 @@ findstr /I "SSL certificate error network" hanguide-logs.txt
 
 pause
 
+

@@ -62,6 +62,9 @@ backup/*
 db_bkrs/*
 !db_bkrs/README.md
 
+# Infrastructure scripts with secrets
+infrastructure/scripts/
+
 # Ignore all markdown files except README
 *.md
 !README.md

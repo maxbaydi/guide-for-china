@@ -20,83 +20,108 @@ export class DictionaryService {
    * Поиск иероглифов с использованием улучшенного алгоритма поиска
    * Автоматически определяет тип ввода (китайский/пиньин/русский)
    * и применяет соответствующую стратегию поиска
+   * 
+   * ОПТИМИЗИРОВАНО: Использует search_enhanced_v2 с агрегированными definitions,
+   * без загрузки examples (lazy loading)
    */
   async searchCharacters(query: string, limit: number = 20): Promise<Character[]> {
-    // Проверяем кеш
-    const cacheKey = `search:${query}:${limit}`;
+    // Проверяем кеш с новой версией ключа
+    const cacheKey = `search:v2:${query}:${limit}`;
     const cached = await this.redisService.getCachedSearchResults(cacheKey);
     if (cached) {
-      this.logger.log(`Cache hit for search: ${query}`);
-      // Ограничиваем примеры и определения даже для закешированных данных
-      const limitedResults = cached.map((char: any) => ({
-        ...char,
-        examples: char.examples?.slice(0, 20) || [],
-        definitions: char.definitions?.slice(0, 20) || [],
-      } as Character));
-      return limitedResults;
+      this.logger.log(`✅ Cache hit for search: ${query}`);
+      return cached;
     }
 
-    this.logger.log(`Cache miss for search: ${query}, querying database`);
+    this.logger.log(`❌ Cache miss for search: ${query}, querying database`);
+    const startTime = Date.now();
     
-    // Используем новый SearchService вместо прямого запроса
-    const searchResults = await this.searchService.searchWithStrategy(query, limit);
+    // Используем ОПТИМИЗИРОВАННЫЙ поиск - одним запросом получаем все данные
+    const inputType = this.detectInputType(query);
+    const normalizedQuery = this.normalizeQuery(query, inputType);
+    const searchResults = await this.searchService.executeSearchOptimized(
+      normalizedQuery,
+      inputType,
+      limit,
+    );
     
     if (searchResults.length === 0) {
       this.logger.log(`No results found for query: ${query}`);
       return [];
     }
     
-    // Загружаем полные данные для найденных иероглифов
-    const characters = await Promise.all(
-      searchResults.map(async (result) => {
-        const character = await this.prisma.character.findUnique({
-          where: { id: result.id },
-          include: {
-            definitions: {
-              orderBy: { order: 'asc' },
-              take: 20, // Ограничиваем до 20 определений
-            },
-            examples: {
-              take: 20, // Ограничиваем до 20 примеров
-              orderBy: {
-                createdAt: 'desc', // Сортируем для детерминированного порядка
-              },
-            },
-          },
-        });
-        
-        return character as Character;
-      }),
+    // Преобразуем результаты в формат Character
+    // Теперь НЕТ N+1 проблемы - все данные уже загружены одним запросом!
+    const characters = searchResults.map((result) => ({
+      id: result.id,
+      simplified: result.simplified,
+      traditional: result.traditional,
+      pinyin: result.pinyin,
+      hskLevel: result.hsk_level,
+      frequency: result.frequency,
+      definitions: result.definitions || [], // Уже загружены из БД
+      examples: [], // НЕ загружаем - используем lazy loading
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Character));
+
+    const duration = Date.now() - startTime;
+    this.logger.log(
+      `🚀 Search completed in ${duration}ms: "${query}" (${characters.length} results)`,
     );
 
-    // Фильтруем null значения (на случай если иероглиф был удален)
-    const validCharacters = characters.filter((char) => char !== null);
-
-    // Кешируем результат на 5 минут (300 секунд)
-    await this.redisService.cacheSearchResults(cacheKey, validCharacters, 300);
+    // Кешируем результат на 30 минут (1800 секунд) вместо 5
+    await this.redisService.cacheSearchResults(cacheKey, characters, 1800);
     
-    return validCharacters;
+    return characters;
+  }
+
+  /**
+   * Вспомогательная функция для определения типа ввода
+   */
+  private detectInputType(query: string): any {
+    // Импортируем из utils
+    const { detectInputType } = require('../utils/input-detector');
+    return detectInputType(query);
+  }
+
+  /**
+   * Вспомогательная функция для нормализации запроса
+   */
+  private normalizeQuery(query: string, inputType: any): string {
+    const {
+      normalizeQuery,
+      normalizePinyin,
+      normalizeRussian,
+      normalizeChinese,
+    } = require('../utils/text-normalizer');
+    
+    switch (inputType) {
+      case 'CHINESE':
+        return normalizeChinese(query);
+      case 'PINYIN':
+        return normalizePinyin(query);
+      case 'RUSSIAN':
+        return normalizeRussian(query);
+      default:
+        return normalizeQuery(query);
+    }
   }
 
   /**
    * Получить иероглиф по ID
+   * ОПТИМИЗИРОВАНО: Загружаем только базовую информацию и definitions
+   * Examples загружаются отдельно через getCharacterExamples()
    */
   async getCharacter(id: string): Promise<Character | null> {
     // Проверяем кеш
     const cached = await this.redisService.getCachedCharacter(id);
     if (cached) {
-      this.logger.log(`Cache hit for character: ${id}`);
-      // Ограничиваем примеры и определения даже для закешированных данных
-      if (cached.examples && cached.examples.length > 20) {
-        cached.examples = cached.examples.slice(0, 20);
-      }
-      if (cached.definitions && cached.definitions.length > 20) {
-        cached.definitions = cached.definitions.slice(0, 20);
-      }
+      this.logger.log(`✅ Cache hit for character: ${id}`);
       return cached;
     }
 
-    this.logger.log(`Cache miss for character: ${id}, querying database`);
+    this.logger.log(`❌ Cache miss for character: ${id}, querying database`);
     const character = await this.prisma.character.findUnique({
       where: { id },
       include: {
@@ -104,24 +129,52 @@ export class DictionaryService {
           orderBy: { order: 'asc' },
           take: 20, // Ограничиваем до 20 определений
         },
-        examples: {
-          take: 20, // Ограничиваем до 20 примеров
-          orderBy: {
-            createdAt: 'desc', // Сортируем для детерминированного порядка
-          },
-        },
+        // НЕ загружаем examples - используем lazy loading
       },
     });
     
     if (character) {
       this.logger.log(`Character found: ${character.simplified} (${character.id})`);
+      
+      // Добавляем пустой массив examples для совместимости
+      const characterWithEmptyExamples = {
+        ...character,
+        examples: [],
+      };
+      
       // Кешируем результат на 1 час (3600 секунд)
-      await this.redisService.cacheCharacter(id, character, 3600);
+      await this.redisService.cacheCharacter(id, characterWithEmptyExamples, 3600);
+      
+      return characterWithEmptyExamples as Character;
     } else {
       this.logger.warn(`Character not found with id: ${id}`);
     }
     
-    return character as Character;
+    return null;
+  }
+
+  /**
+   * Загрузить примеры для иероглифа (lazy loading)
+   * Вызывается отдельно, только когда пользователь открывает детали иероглифа
+   */
+  async getCharacterExamples(characterId: string, limit: number = 20): Promise<any[]> {
+    // Проверяем кеш примеров
+    const cacheKey = `examples:${characterId}:${limit}`;
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      this.logger.log(`✅ Cache hit for examples: ${characterId}`);
+      return JSON.parse(cached);
+    }
+
+    this.logger.log(`❌ Cache miss for examples: ${characterId}, querying database`);
+    
+    // Используем оптимизированную функцию из миграции 008
+    const examples = await this.searchService.getCharacterExamples(characterId, limit);
+    
+    // Кешируем примеры на 1 час
+    await this.redisService.set(cacheKey, JSON.stringify(examples), 3600);
+    
+    return examples;
   }
 
   /**

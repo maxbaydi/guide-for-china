@@ -148,3 +148,4 @@ if PGPASSWORD="$PASSWORD" psql -h "$HOST" -p "$PORT" -U "$USERNAME" -d "$DATABAS
 else
     error "Ошибка при финальной проверке"
 fi
+

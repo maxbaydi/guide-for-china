@@ -84,3 +84,4 @@ echo "And test the mobile app configuration:"
 echo -e "   ${YELLOW}cd mobile && eas build --platform android --profile production${NC}"
 echo ""
 
+

@@ -5,6 +5,7 @@ import { Phrase } from '../entities/phrase.entity';
 import { CharacterAnalysis } from '../entities/character-analysis.entity';
 import { SimilarWord } from '../entities/similar-word.entity';
 import { ReverseTranslation } from '../entities/reverse-translation.entity';
+import { Example } from '../entities/example.entity';
 
 @Resolver()
 export class DictionaryResolver {
@@ -98,6 +99,17 @@ export class DictionaryResolver {
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit: number,
   ): Promise<ReverseTranslation[]> {
     return this.dictionaryService.getReverseTranslations(simplified, limit);
+  }
+
+  @Query(() => [Example], {
+    name: 'getCharacterExamples',
+    description: 'Загрузить примеры для иероглифа (lazy loading)',
+  })
+  async getCharacterExamples(
+    @Args('characterId', { type: () => String }) characterId: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit: number,
+  ): Promise<Example[]> {
+    return this.dictionaryService.getCharacterExamples(characterId, limit);
   }
 }
 

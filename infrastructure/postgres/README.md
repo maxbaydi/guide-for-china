@@ -124,3 +124,4 @@ SELECT search_enhanced('你好', 'exact', 10);
 Создано: 19 октября 2025
 Версия схемы: Полная схема Chinese Guide
 Размер dump: ~49KB
+

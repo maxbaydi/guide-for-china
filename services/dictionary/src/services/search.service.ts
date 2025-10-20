@@ -12,7 +12,7 @@ import {
 } from '../utils/text-normalizer';
 
 /**
- * Интерфейс для результатов поиска из БД
+ * Интерфейс для результатов поиска из БД (старая версия)
  */
 export interface SearchResult {
   id: string;
@@ -23,6 +23,33 @@ export interface SearchResult {
   frequency: number | null;
   match_score: number;
   match_type: 'exact' | 'prefix' | 'fuzzy';
+}
+
+/**
+ * Интерфейс для оптимизированных результатов поиска с агрегированными definitions
+ */
+export interface SearchResultOptimized {
+  id: string;
+  simplified: string;
+  traditional: string | null;
+  pinyin: string | null;
+  hsk_level: number | null;
+  frequency: number | null;
+  definitions: any[]; // JSONB array from PostgreSQL
+  match_score: number;
+  match_type: 'exact' | 'prefix' | 'fuzzy';
+}
+
+/**
+ * Интерфейс для примеров иероглифа
+ */
+export interface CharacterExample {
+  id: string;
+  chinese: string;
+  pinyin: string | null;
+  russian: string;
+  source: string | null;
+  created_at: Date;
 }
 
 /**
@@ -133,6 +160,98 @@ export class SearchService {
         error,
       );
       // В случае ошибки возвращаем пустой массив
+      return [];
+    }
+  }
+
+  /**
+   * ОПТИМИЗИРОВАННЫЙ поиск с использованием search_enhanced_v2
+   * Возвращает результаты с агрегированными definitions, без N+1 проблемы
+   * 
+   * @param normalizedQuery - нормализованный запрос
+   * @param inputType - тип ввода
+   * @param limit - лимит результатов
+   * @returns результаты из БД с definitions в JSONB
+   */
+  async executeSearchOptimized(
+    normalizedQuery: string,
+    inputType: InputType,
+    limit: number,
+  ): Promise<SearchResultOptimized[]> {
+    try {
+      const queryType = this.mapInputTypeToQueryType(inputType);
+      const startTime = Date.now();
+
+      // Используем специализированные функции для лучшей производительности
+      let results: SearchResultOptimized[];
+      
+      if (inputType === InputType.CHINESE) {
+        // Для китайского используем оптимизированную функцию
+        results = await this.prisma.$queryRaw<SearchResultOptimized[]>`
+          SELECT * FROM search_chinese_fast(
+            ${normalizedQuery}::text,
+            ${limit}::integer
+          )
+        `;
+      } else if (inputType === InputType.PINYIN) {
+        // Для пиньинь используем специализированную функцию
+        results = await this.prisma.$queryRaw<SearchResultOptimized[]>`
+          SELECT * FROM search_pinyin_fast(
+            ${normalizedQuery}::text,
+            ${limit}::integer
+          )
+        `;
+      } else {
+        // Для русского и mixed используем универсальную функцию
+        results = await this.prisma.$queryRaw<SearchResultOptimized[]>`
+          SELECT * FROM search_enhanced_v2(
+            ${normalizedQuery}::text,
+            ${queryType}::text,
+            ${limit}::integer
+          )
+        `;
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.log(
+        `Search completed in ${duration}ms: "${normalizedQuery}" (${inputType}, ${results?.length || 0} results)`,
+      );
+
+      return results || [];
+    } catch (error) {
+      this.logger.error(
+        `Optimized search execution failed for query "${normalizedQuery}":`,
+        error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Загрузка примеров для иероглифа (lazy loading)
+   * 
+   * @param characterId - ID иероглифа
+   * @param limit - количество примеров
+   * @returns массив примеров
+   */
+  async getCharacterExamples(
+    characterId: string,
+    limit: number = 20,
+  ): Promise<CharacterExample[]> {
+    try {
+      const results = await this.prisma.$queryRaw<CharacterExample[]>`
+        SELECT * FROM get_character_examples(
+          ${characterId}::uuid,
+          ${limit}::integer
+        )
+      `;
+
+      return results || [];
+    } catch (error) {
+      this.logger.error(
+        `Failed to load examples for character ${characterId}:`,
+        error,
+      );
       return [];
     }
   }
