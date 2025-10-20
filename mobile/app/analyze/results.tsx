@@ -90,7 +90,7 @@ export default function AnalyzeResultsScreen() {
         contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
       >
         <Text style={[styles.statsText, { color: theme.textSecondary }]}>
-          {t('analyze.charactersFound', { count: analysisData.length })}
+          {t('analyze.wordsFound', { count: analysisData.length })}
         </Text>
         
         <Card variant="elevated" style={styles.textCard}>
@@ -98,10 +98,13 @@ export default function AnalyzeResultsScreen() {
             <Text style={styles.originalText}>
               {analysisData.map((item, index) => (
                 <Text
-                  key={`char-${index}-${item.character}`}
+                  key={`word-${index}-${item.word}`}
                   style={[
-                    styles.characterSpan,
-                    { color: item.details ? getCharColor(index, theme) : theme.textTertiary }
+                    styles.wordSpan,
+                    { 
+                      color: item.details ? getCharColor(index, theme) : theme.textTertiary,
+                      backgroundColor: item.details ? `${getCharColor(index, theme)}15` : 'transparent',
+                    }
                   ]}
                   onPress={() => {
                     if (item.details?.id) {
@@ -109,7 +112,7 @@ export default function AnalyzeResultsScreen() {
                     }
                   }}
                 >
-                  {item.character}
+                  {item.word}
                 </Text>
               ))}
             </Text>
@@ -118,12 +121,12 @@ export default function AnalyzeResultsScreen() {
 
         <View style={styles.charactersList}>
           {analysisData
-            .filter((item) => item.details) // Показываем только иероглифы с данными
+            .filter((item) => item.details) // Показываем только слова с данными
             .map((item, index) => {
               // Преобразуем CharacterAnalysis в Character для CharacterCard
               const character: Character = {
                 id: item.details?.id || '',
-                simplified: item.character,
+                simplified: item.word,
                 pinyin: item.details?.pinyin || '',
                 definitions: item.details?.definitions || [],
                 examples: item.details?.examples || [],
@@ -133,7 +136,7 @@ export default function AnalyzeResultsScreen() {
               
               return (
                 <CharacterCard
-                  key={`card-${index}-${item.details?.id || item.character}`}
+                  key={`card-${index}-${item.details?.id || item.word}`}
                   character={character}
                   onPress={() => {
                     if (item.details?.id) {
@@ -175,13 +178,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   originalText: {
-    lineHeight: 40,
+    lineHeight: 44,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  characterSpan: {
+  wordSpan: {
     fontFamily: 'Noto Serif SC',
     fontSize: 32,
+    marginRight: 4,
+    marginBottom: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   charactersList: {
     gap: 12,

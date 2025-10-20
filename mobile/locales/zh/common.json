@@ -60,12 +60,13 @@
   },
   "analyze": {
     "title": "文本分析",
-    "subtitle": "输入要分析的文本",
+    "subtitle": "输入要按词分析的文本",
     "placeholder": "我爱学中文...",
     "analyzeButton": "分析",
     "pasteButton": "粘贴",
     "clearButton": "清除",
     "results": "分析结果",
+    "wordsFound": "找到 {{count}} 个词",
     "charactersFound": "找到 {{count}} 个汉字",
     "characterCount": "{{count}} / {{max}} 个字符"
   },

@@ -230,72 +230,72 @@ export class DictionaryService {
   }
 
   /**
-   * Анализ текста - разбивает текст на иероглифы и возвращает информацию о каждом
-   * Оптимизирован для избежания N+1 запросов к базе данных
+   * Анализ текста - разбивает текст на СЛОВА и возвращает информацию о каждом
+   * Использует pg_jieba для сегментации китайского текста
+   * Оптимизирован: все данные загружаются одним SQL-запросом
    */
   async analyzeText(text: string): Promise<CharacterAnalysis[]> {
-    // Проверяем кеш
-    const cached = await this.redisService.getCachedAnalysisResults(text);
+    // Проверяем кеш (используем новый ключ для пословного анализа)
+    const cacheKey = `analysis:words:v2:${text}`;
+    const cached = await this.redisService.get(cacheKey);
     if (cached) {
-      this.logger.log(`Cache hit for text analysis: ${text.substring(0, 20)}...`);
-      return cached;
+      this.logger.log(`✅ Cache hit for word-based text analysis: ${text.substring(0, 20)}...`);
+      return JSON.parse(cached);
     }
 
-    this.logger.log(`Cache miss for text analysis, processing: ${text.substring(0, 20)}...`);
-    const characters = text.split('');
+    this.logger.log(`❌ Cache miss for word-based text analysis, processing: ${text.substring(0, 20)}...`);
+    const startTime = Date.now();
     
-    // Шаг 1: Собрать все уникальные китайские иероглифы из текста
-    const uniqueChineseChars = new Set<string>();
-    for (const char of characters) {
-      if (this.isChineseCharacter(char)) {
-        uniqueChineseChars.add(char);
+    // Используем SQL-функцию для пословной сегментации с pg_jieba
+    interface WordAnalysisRow {
+      word_position: number;
+      word: string;
+      word_id: string | null;
+      simplified: string | null;
+      pinyin: string | null;
+      definitions: any;
+    }
+    
+    const results = await this.prisma.$queryRaw<WordAnalysisRow[]>`
+      SELECT * FROM analyze_text_by_words(${text}::text, 1000)
+    `;
+    
+    this.logger.log(`🚀 Word segmentation completed in ${Date.now() - startTime}ms: found ${results.length} words`);
+    
+    // Преобразуем результаты в формат CharacterAnalysis
+    const analysis: CharacterAnalysis[] = results.map((row) => {
+      // Если слово найдено в БД
+      if (row.word_id && row.simplified) {
+        return {
+          word: row.word,
+          position: row.word_position,
+          details: {
+            id: row.word_id,
+            simplified: row.simplified,
+            pinyin: row.pinyin || '',
+            definitions: row.definitions || [],
+            examples: [], // Не загружаем для оптимизации
+            hskLevel: undefined,
+            frequency: undefined,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as Character,
+        };
+      } else {
+        // Слово не найдено в БД
+        return {
+          word: row.word,
+          position: row.word_position,
+          details: undefined,
+        };
       }
-    }
-
-    // Шаг 2: Выполнить один массовый запрос для всех уникальных иероглифов
-    // Не загружаем examples для оптимизации производительности - они не нужны в UI анализа
-    const uniqueCharsArray = Array.from(uniqueChineseChars);
-    this.logger.log(`Fetching ${uniqueCharsArray.length} unique characters from database`);
-    
-    const characterRecords = await this.prisma.character.findMany({
-      where: {
-        simplified: {
-          in: uniqueCharsArray,
-        },
-      },
-      include: {
-        definitions: {
-          orderBy: { order: 'asc' },
-          take: 20, // Ограничиваем до 20 определений
-        },
-      },
     });
 
-    // Шаг 3: Создать Map для быстрого доступа O(1)
-    const characterMap = new Map<string, Character>();
-    for (const char of characterRecords) {
-      // Добавляем пустой массив examples, так как мы их не загружали для оптимизации
-      characterMap.set(char.simplified, { ...char, examples: [] } as Character);
-    }
-
-    // Шаг 4: Построить результат используя Map
-    const analysis: CharacterAnalysis[] = [];
-    for (let i = 0; i < characters.length; i++) {
-      const char = characters[i];
-      
-      if (this.isChineseCharacter(char)) {
-        const details = characterMap.get(char);
-        
-        analysis.push({
-          character: char,
-          details: details || undefined,
-          position: i,
-        });
-      }
-    }
-
     // Кешируем результат на 30 минут (1800 секунд)
-    await this.redisService.cacheAnalysisResults(text, analysis, 1800);
+    await this.redisService.set(cacheKey, JSON.stringify(analysis), 1800);
+
+    const duration = Date.now() - startTime;
+    this.logger.log(`✅ Text analysis completed in ${duration}ms: ${analysis.length} words found`);
 
     return analysis;
   }

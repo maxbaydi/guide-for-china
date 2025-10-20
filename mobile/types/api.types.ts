@@ -61,7 +61,7 @@ export interface AnalyzedCharacter {
 
 export interface CharacterAnalysis {
   position: number;
-  character: string;
+  word: string;  // Изменено с character на word для пословного анализа
   details?: {
     id: string;
     simplified: string;

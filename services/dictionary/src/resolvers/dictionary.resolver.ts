@@ -57,7 +57,7 @@ export class DictionaryResolver {
 
   @Query(() => [CharacterAnalysis], {
     name: 'analyzeText',
-    description: 'Разобрать текст на иероглифы и получить информацию о каждом',
+    description: 'Разобрать текст на СЛОВА (пословный анализ) с использованием jieba и получить информацию о каждом слове',
   })
   async analyzeText(
     @Args('text', { type: () => String }) text: string,

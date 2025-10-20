@@ -4,8 +4,8 @@ const path = require('path');
 
 // Load .env.production if it exists, otherwise use .env
 const envPath = process.env.EAS_BUILD 
-  ? path.resolve(__dirname, '.env.production')
-  : path.resolve(__dirname, '.env');
+  ? path.resolve(__dirname, '.env')
+  : path.resolve(__dirname, '.env.production');
 
 dotenv.config({ path: envPath });
 

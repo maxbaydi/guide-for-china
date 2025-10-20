@@ -62,12 +62,13 @@
   },
   "analyze": {
     "title": "Анализ текста",
-    "subtitle": "Вставьте текст для анализа",
+    "subtitle": "Вставьте текст для пословного анализа",
     "placeholder": "我爱学中文...",
     "analyzeButton": "Анализировать",
     "pasteButton": "Вставить",
     "clearButton": "Очистить",
     "results": "Результаты анализа",
+    "wordsFound": "Найдено {{count}} слов",
     "charactersFound": "Найдено {{count}} иероглифов",
     "characterCount": "{{count}} / {{max}} символов"
   },
