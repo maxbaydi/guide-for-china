@@ -122,7 +122,7 @@ export const DefinitionGroup: React.FC<DefinitionGroupProps> = ({ definitions })
           {section.subsections.map((subsection, subsectionIndex) => (
             <View key={`subsection-${section.sectionNumber}-${subsection.label}-${subsectionIndex}`}>
               {/* Заголовок подраздела */}
-              <View style={[styles.subsectionHeader, { backgroundColor: theme.backgroundLight }]}>
+              <View style={[styles.subsectionHeader, { backgroundColor: theme.surfaceHover }]}>
                 <Text style={[styles.subsectionLabel, { color: theme.primary }]}>
                   {subsection.label}
                 </Text>
@@ -178,7 +178,7 @@ export const DefinitionGroup: React.FC<DefinitionGroupProps> = ({ definitions })
 
           {/* Разделитель между разделами */}
           {sectionIndex < sections.length - 1 && (
-            <Divider style={styles.sectionDivider} />
+            <Divider style={[styles.sectionDivider, { backgroundColor: theme.border }]} />
           )}
         </View>
       ))}
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
   },
   sectionDivider: {
     height: 1,
-    backgroundColor: '#E0E0E0',
     marginVertical: 20,
   },
 });

@@ -262,7 +262,7 @@ export default function CharacterDetailScreen() {
                         highlightCharacter={character.simplified}
                       />
                       {idx < (character.examples?.length ?? 0) - 1 && (
-                        <Divider style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />
+                        <Divider style={[styles.divider, { backgroundColor: theme.border }]} />
                       )}
                     </View>
                   ))
@@ -333,7 +333,7 @@ export default function CharacterDetailScreen() {
                         )}
                       </View>
                       {idx < reverseTranslations.length - 1 && (
-                        <Divider style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />
+                        <Divider style={[styles.divider, { backgroundColor: theme.border }]} />
                       )}
                     </View>
                   ))
@@ -466,7 +466,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#E0E0E0',
   },
   examplesList: {
     gap: 0,
