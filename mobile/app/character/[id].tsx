@@ -139,7 +139,7 @@ export default function CharacterDetailScreen() {
       />
       <ScrollView 
         style={[styles.container, { backgroundColor: theme.background }]} 
-        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 12 }]}
       >
         <Card style={styles.characterCard}>
           <View style={styles.characterCardContent}>

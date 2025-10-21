@@ -87,7 +87,7 @@ export default function AnalyzeResultsScreen() {
       />
       <ScrollView 
         style={[styles.container, { backgroundColor: theme.background }]} 
-        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 12 }]}
       >
         <Text style={[styles.statsText, { color: theme.textSecondary }]}>
           {t('analyze.wordsFound', { count: analysisData.length })}

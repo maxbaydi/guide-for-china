@@ -83,7 +83,7 @@
     "newCollection": "Новая коллекция",
     "collectionName": "Название",
     "nameLabel": "Название коллекции",
-    "iconLabel": "Иконка (эмодзи)",
+    "iconLabel": "Иконка коллекции",
     "namePlaceholder": "Напр. Еда и напитки",
     "wordsCount": "{{count}} слов",
     "wordCount": "{{count}} слово",
@@ -95,7 +95,17 @@
     "removedFrom": "Удалено из \"{{name}}\"",
     "createButton": "Создать",
     "notFound": "Коллекция не найдена",
-    "selectCollection": "Выберите коллекцию"
+    "selectCollection": "Выберите коллекцию",
+    "editCollection": "Редактировать коллекцию",
+    "deleteCollection": "Удалить коллекцию",
+    "deleteConfirmTitle": "Удалить коллекцию?",
+    "deleteConfirmMessage": "Эта коллекция и все её содержимое будут удалены. Это действие нельзя отменить.",
+    "collectionDeleted": "Коллекция удалена",
+    "collectionUpdated": "Коллекция обновлена",
+    "removeCharacter": "Удалить из коллекции",
+    "removeCharacterConfirmTitle": "Удалить иероглиф?",
+    "removeCharacterConfirmMessage": "Иероглиф будет удален из коллекции",
+    "characterRemoved": "Иероглиф удален из коллекции"
   },
   "profile": {
     "title": "Профиль",

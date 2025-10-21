@@ -10,7 +10,9 @@ import * as z from 'zod';
 import { useTheme } from '../../contexts/ThemeContext';
 import { TextInput } from '../../components/ui/TextInput';
 import { CustomButton } from '../../components/ui/Button';
+import { IconPicker } from '../../components/ui/IconPicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DEFAULT_COLLECTION_ICON } from '../../utils/collectionIcons';
 
 const CREATE_COLLECTION = gql`
   mutation CreateCollection($name: String!, $icon: String) {
@@ -24,7 +26,7 @@ const CREATE_COLLECTION = gql`
 
 const schema = z.object({
   name: z.string().min(1, 'errors.required').max(50, 'errors.maxLength'),
-  icon: z.string().max(2, 'errors.maxLength'),
+  icon: z.string().min(1, 'errors.required'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -45,7 +47,7 @@ export default function CreateCollectionScreen() {
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', icon: '📚' },
+    defaultValues: { name: '', icon: DEFAULT_COLLECTION_ICON },
   });
 
   const onSubmit = (data: FormData) => {
@@ -85,14 +87,10 @@ export default function CreateCollectionScreen() {
       <Controller
         control={control}
         name="icon"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label={t('collections.iconLabel')}
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.icon}
-            errorMessage={errors.icon ? t(errors.icon.message as string) : undefined}
-            maxLength={2}
+        render={({ field: { onChange, value } }) => (
+          <IconPicker
+            selectedIcon={value}
+            onSelectIcon={onChange}
           />
         )}
       />

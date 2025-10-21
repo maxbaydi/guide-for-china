@@ -8,3 +8,4 @@ export { Chip } from './Chip';
 export { IconButton } from './IconButton';
 export { ProgressBar } from './ProgressBar';
 export { Avatar } from './Avatar';
+export { IconPicker } from './IconPicker';

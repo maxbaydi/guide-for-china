@@ -6,6 +6,7 @@ import { useQuery, useMutation, gql } from '@apollo/client';
 import { Colors } from '../constants/Colors';
 import { showSuccess, showError } from '../utils/toast';
 import { getErrorMessage } from '../utils/errorHandler';
+import { getCollectionIcon } from '../utils/collectionIcons';
 
 const GET_MY_COLLECTIONS = gql`
   query GetMyCollections {
@@ -132,11 +133,21 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                 data={collections}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                  <RadioButton.Item
-                    label={`${item.icon || '📚'} ${item.name}`}
-                    value={item.id}
-                    labelStyle={styles.radioLabel}
-                  />
+                  <View style={styles.radioItem}>
+                    <RadioButton.Item
+                      label={item.name}
+                      value={item.id}
+                      labelStyle={styles.radioLabel}
+                      left={() => (
+                        <MaterialCommunityIcons 
+                          name={getCollectionIcon(item.icon) as any} 
+                          size={24} 
+                          color={Colors.primary}
+                          style={styles.radioIcon}
+                        />
+                      )}
+                    />
+                  </View>
                 )}
                 ItemSeparatorComponent={() => <Divider />}
                 style={styles.list}
@@ -182,6 +193,13 @@ const styles = StyleSheet.create({
   },
   list: {
     maxHeight: 300,
+  },
+  radioItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioIcon: {
+    marginRight: 8,
   },
   radioLabel: {
     fontSize: 16,

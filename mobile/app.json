@@ -2,16 +2,16 @@
   "expo": {
     "name": "HanGuide",
     "slug": "hanguide",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "hanguide",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#C7EDFC"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#C7EDFC"
       },
       "package": "com.hanguide.app",
       "usesCleartextTraffic": false,

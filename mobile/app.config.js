@@ -7,12 +7,15 @@ const envPath = process.env.EAS_BUILD
   ? path.resolve(__dirname, '.env')
   : path.resolve(__dirname, '.env.production');
 
-dotenv.config({ path: envPath });
+// override: true позволяет перезаписывать существующие переменные окружения
+const result = dotenv.config({ path: envPath, override: true });
+
+console.log('🔧 Dotenv result:', result.error ? result.error.message : `Loaded ${Object.keys(result.parsed || {}).length} variables`);
 
 // Get API URLs from environment variables
 // При сборке EAS приоритет у переменных окружения из eas.json
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.31.88:4000/api/v1';
-const graphqlUrl = process.env.EXPO_PUBLIC_GRAPHQL_URL || 'http://192.168.31.88:4002/graphql';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+const graphqlUrl = process.env.EXPO_PUBLIC_GRAPHQL_URL;
 
 console.log('📱 Mobile App Configuration:');
 console.log('  EAS_BUILD:', process.env.EAS_BUILD);

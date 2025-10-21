@@ -211,7 +211,7 @@ export default function SettingsScreen() {
       
       <ScrollView 
         style={[styles.container, { backgroundColor: theme.background }]} 
-        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 12 }]}
       >
       
       {/* Profile Section */}

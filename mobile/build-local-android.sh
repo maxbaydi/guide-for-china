@@ -34,6 +34,36 @@ fi
 echo "✅ ANDROID_HOME: $ANDROID_HOME"
 echo ""
 
+# Функция для проверки и исправления поврежденных Build Tools
+cleanup_corrupted_build_tools() {
+    echo "🔍 Проверка целостности Build Tools..."
+    
+    local corrupted_found=false
+    
+    if [ -d "$ANDROID_HOME/build-tools" ]; then
+        for version_dir in "$ANDROID_HOME/build-tools"/*; do
+            if [ -d "$version_dir" ]; then
+                version=$(basename "$version_dir")
+                if [ ! -f "$version_dir/aapt" ] && [ ! -f "$version_dir/aapt.exe" ]; then
+                    echo "⚠️  Build Tools $version повреждены (отсутствует aapt)"
+                    rm -rf "$version_dir"
+                    echo "✅ Build Tools $version удалены"
+                    corrupted_found=true
+                fi
+            fi
+        done
+    fi
+    
+    if [ "$corrupted_found" = true ]; then
+        echo "✅ Поврежденные Build Tools очищены"
+        echo ""
+    fi
+}
+
+cleanup_corrupted_build_tools
+
+echo ""
+
 # Выбор окружения
 echo "📝 Выберите окружение:"
 echo "  1. Development (локальный сервер 192.168.31.88)"
@@ -134,7 +164,17 @@ case $BUILD_TYPE in
         echo ""
         echo "🔨 Сборка Release APK..."
         cd android
-        ./gradlew assembleRelease
+        if ! ./gradlew assembleRelease; then
+            echo ""
+            echo "❌ Ошибка сборки!"
+            echo ""
+            echo "💡 Возможные решения:"
+            echo "  1. Проверьте целостность Build Tools: rm -rf \$ANDROID_HOME/build-tools/*/aapt"
+            echo "  2. Очистите кэш Gradle: ./gradlew clean"
+            echo "  3. Обновите SDK Manager через Android Studio"
+            echo ""
+            exit 1
+        fi
         cd ..
         echo ""
         echo "✅ Release APK собран!"
@@ -144,7 +184,6 @@ case $BUILD_TYPE in
         echo ""
         APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
         
-        # Показываем размер APK
         if [ -f "$APK_PATH" ]; then
             SIZE=$(ls -lh "$APK_PATH" | awk '{print $5}')
             echo "📋 Размер APK: $SIZE"

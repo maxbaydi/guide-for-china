@@ -18,6 +18,7 @@ interface TextInputProps {
   rightIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
   onRightIconPress?: () => void;
   onSubmitEditing?: () => void;
+  onBlur?: (...args: any[]) => void;
   maxLength?: number;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
@@ -40,6 +41,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   rightIcon,
   onRightIconPress,
   onSubmitEditing,
+  onBlur,
   maxLength,
   autoCapitalize = 'none',
   keyboardType = 'default',
@@ -62,6 +64,9 @@ export const TextInput: React.FC<TextInputProps> = ({
   const handleBlur = () => {
     setIsFocused(false);
     borderWidth.value = withTiming(1, { duration: 200 });
+    if (onBlur) {
+      onBlur();
+    }
   };
 
   const getBorderColor = () => {

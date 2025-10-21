@@ -72,13 +72,17 @@ export default function SearchResultsScreen() {
           headerShown: true,
           title: t('search.resultsTitle'),
           headerBackTitle: t('search.title'),
+          headerStyle: {
+            backgroundColor: theme.surface,
+          },
+          headerTintColor: theme.text,
         }}
       />
       
       <FlatList
         data={searchResults || []}
         keyExtractor={(item, index) => `${item.id}-${index}`}
-        contentContainerStyle={[styles.listContent, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={[styles.listContent, { paddingTop: insets.top + 12 }]}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
