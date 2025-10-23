@@ -1,0 +1,48 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  log_level: debug  # Детальное логирование для разработки
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+  chunk_idle_period: 1m  # Более короткий период для dev
+  chunk_retain_period: 10s  # Быстрее освобождаем память
+  max_chunk_age: 30m  # Короткий период для быстрого тестирования
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 1h  # Более короткие индексы для dev
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/boltdb-cache
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  retention_period: 24h  # Короткое хранение для dev
+  allow_structured_metadata: false
+  max_streams_per_user: 1000  # Меньше лимитов для dev
+  max_line_size: 128000
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 24h
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 512  # Меньше для dev
+
+common:
+  path_prefix: /tmp/loki

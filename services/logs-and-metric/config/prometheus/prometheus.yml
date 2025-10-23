@@ -1,0 +1,106 @@
+global:
+  scrape_interval: ${PROMETHEUS_SCRAPE_INTERVAL:-15s}
+  evaluation_interval: 15s
+  scrape_timeout: ${PROMETHEUS_SCRAPE_TIMEOUT:-10s}
+
+# Правила для алертов (опционально)
+rule_files:
+  # - "alert_rules.yml"
+
+scrape_configs:
+  # Мониторинг самого Prometheus
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Мониторинг Loki
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: '/metrics'
+
+  # Мониторинг Promtail
+  - job_name: 'promtail'
+    static_configs:
+      - targets: ['promtail:9080']
+    metrics_path: '/metrics'
+
+  # Мониторинг Grafana
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: '/metrics'
+
+  # Статические targets для сервисов проекта
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:4000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'dictionary-service'
+    static_configs:
+      - targets: ['dictionary-service:4001']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:4002']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'tts-service'
+    static_configs:
+      - targets: ['tts-service:4003']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Автоматическое обнаружение Docker контейнеров с метриками
+  - job_name: 'docker-containers'
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+        filters:
+          # Собираем метрики только от контейнеров с label monitoring=enabled
+          - name: label
+            values: ["monitoring=enabled"]
+    relabel_configs:
+      # Извлекаем имя контейнера
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container_name'
+        regex: '/(.*)'
+        replacement: '${1}'
+      
+      # Извлекаем имя образа
+      - source_labels: ['__meta_docker_container_image']
+        target_label: 'image_name'
+      
+      # Извлекаем дополнительные labels
+      - source_labels: ['__meta_docker_container_label_monitoring_service']
+        target_label: 'service'
+      
+      - source_labels: ['__meta_docker_container_label_monitoring_environment']
+        target_label: 'environment'
+        replacement: '${MONITORING_ENVIRONMENT:-prod}'
+      
+      # Устанавливаем адрес для сбора метрик
+      - source_labels: ['__meta_docker_container_label_monitoring_port']
+        target_label: '__address__'
+        regex: '(.+)'
+        replacement: '${1}:${2}'
+      
+      # Если порт не указан, используем стандартный
+      - source_labels: ['__meta_docker_container_ip', '__meta_docker_container_label_monitoring_port']
+        target_label: '__address__'
+        regex: '(.+);'
+        replacement: '${1}:8080'
+      
+      # Устанавливаем путь к метрикам
+      - source_labels: ['__meta_docker_container_label_monitoring_path']
+        target_label: '__metrics_path__'
+        replacement: '${1}'
+      
+      # Если путь не указан, используем стандартный
+      - target_label: '__metrics_path__'
+        replacement: '/metrics'

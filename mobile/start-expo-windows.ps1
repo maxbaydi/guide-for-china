@@ -13,3 +13,4 @@ Write-Host ""
 Write-Host "Запуск Expo..." -ForegroundColor Green
 npx expo start --clear
 
+

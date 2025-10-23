@@ -25,6 +25,7 @@ async function bootstrap() {
   
   console.log(`🚀 Dictionary Service запущен на http://localhost:${port}`);
   console.log(`📊 GraphQL Playground: http://localhost:${port}/graphql`);
+  console.log(`📈 Metrics endpoint: http://localhost:${port}/metrics`);
 }
 
 bootstrap();

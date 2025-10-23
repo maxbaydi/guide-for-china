@@ -29,3 +29,4 @@ echo "🚀 Запуск Expo..."
 cd /mnt/c/Users/jerem/OneDrive/Документы/guide-for-china/mobile
 npx expo start --clear
 
+

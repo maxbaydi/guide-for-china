@@ -1,18 +1,24 @@
 import { useEffect, useCallback, useState } from 'react';
-import { FlatList, View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { FlatList, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, gql } from '@apollo/client';
-import { ActivityIndicator, Menu, Portal, Dialog, Button, Text } from 'react-native-paper';
+import { ActivityIndicator, Dialog, Button, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { CollectionItem, Character as CharacterType } from '../../types/api.types';
 import { useTheme } from '../../contexts/ThemeContext';
 import { CharacterCard } from '../../components/ui/CharacterCard';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { IconButton } from '../../components/ui/IconButton';
+import { TextInput } from '../../components/ui/TextInput';
+import { IconPicker } from '../../components/ui/IconPicker';
 import { showError, showSuccess } from '../../utils/toast';
 import { getErrorMessage } from '../../utils/errorHandler';
-import { getCollectionIcon } from '../../utils/collectionIcons';
+import { DEFAULT_COLLECTION_ICON, getCollectionIcon } from '../../utils/collectionIcons';
 
 const GET_COLLECTION = gql`
   query GetCollection($id: String!) {
@@ -34,39 +40,28 @@ const GET_COLLECTION = gql`
   }
 `;
 
-const REMOVE_FROM_COLLECTION = gql`
-  mutation RemoveFromCollection($collectionId: String!, $characterId: String!) {
-    removeFromCollection(collectionId: $collectionId, characterId: $characterId)
+const UPDATE_COLLECTION = gql`
+  mutation UpdateCollection($id: String!, $input: UpdateCollectionInput!) {
+    updateCollection(id: $id, input: $input) {
+      id
+      name
+      icon
+    }
   }
 `;
 
-const calculateMenuPosition = (x: number, y: number, elementWidth: number, elementHeight: number) => {
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-  const MENU_WIDTH = 200;
-  const MENU_HEIGHT = 60;
-  const PADDING = 16;
-  
-  let menuX = x;
-  let menuY = y + elementHeight;
-  
-  if (menuX + MENU_WIDTH > screenWidth - PADDING) {
-    menuX = screenWidth - MENU_WIDTH - PADDING;
+const DELETE_COLLECTION = gql`
+  mutation DeleteCollection($id: String!) {
+    deleteCollection(id: $id)
   }
-  
-  if (menuX < PADDING) {
-    menuX = PADDING;
-  }
-  
-  if (menuY + MENU_HEIGHT > screenHeight - PADDING) {
-    menuY = y - MENU_HEIGHT;
-  }
-  
-  if (menuY < PADDING) {
-    menuY = PADDING;
-  }
-  
-  return { x: menuX, y: menuY };
-};
+`;
+
+const schema = z.object({
+  name: z.string().min(1, 'errors.required').max(50, 'errors.maxLength'),
+  icon: z.string().min(1, 'errors.required'),
+});
+
+type FormData = z.infer<typeof schema>;
 
 export default function CollectionDetailScreen() {
   const { t } = useTranslation();
@@ -75,10 +70,8 @@ export default function CollectionDetailScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState({ x: 0, y: 0 });
+  const [editDialogVisible, setEditDialogVisible] = useState(false);
 
   const { data, loading, refetch, error } = useQuery(GET_COLLECTION, {
     variables: { id },
@@ -89,15 +82,35 @@ export default function CollectionDetailScreen() {
     },
   });
 
-  const [removeFromCollection, { loading: removing }] = useMutation(REMOVE_FROM_COLLECTION, {
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', icon: DEFAULT_COLLECTION_ICON },
+  });
+
+  const [updateCollection, { loading: updating }] = useMutation(UPDATE_COLLECTION, {
     refetchQueries: ['GetCollection', 'GetMyCollections'],
     onCompleted: () => {
-      showSuccess(t('collections.characterRemoved'));
-      setDeleteDialogVisible(false);
-      setSelectedCharacter(null);
+      showSuccess(t('collections.collectionUpdated'));
+      setEditDialogVisible(false);
     },
     onError: (error) => {
-      console.error('Failed to remove character:', error);
+      console.error('Failed to update collection:', error);
+      const errorMessage = getErrorMessage(error);
+      showError(errorMessage);
+    },
+    context: {
+      skipErrorToast: true,
+    },
+  });
+
+  const [deleteCollection, { loading: deleting }] = useMutation(DELETE_COLLECTION, {
+    refetchQueries: ['GetMyCollections'],
+    onCompleted: () => {
+      showSuccess(t('collections.collectionDeleted'));
+      router.back();
+    },
+    onError: (error) => {
+      console.error('Failed to delete collection:', error);
       const errorMessage = getErrorMessage(error);
       showError(errorMessage);
     },
@@ -126,31 +139,37 @@ export default function CollectionDetailScreen() {
 
   const collection = data?.collection;
 
-  const handleLongPress = (characterId: string, event: any) => {
-    setSelectedCharacter(characterId);
-    const target = event.currentTarget;
-    if (target && target.measureInWindow) {
-      target.measureInWindow((x: number, y: number, width: number, height: number) => {
-        const position = calculateMenuPosition(x, y, width, height);
-        setMenuAnchor(position);
-        setMenuVisible(true);
+  const handleEdit = () => {
+    if (collection) {
+      reset({
+        name: collection.name,
+        icon: getCollectionIcon(collection.icon),
       });
-    } else {
-      setMenuVisible(true);
+      setEditDialogVisible(true);
     }
   };
 
   const handleDeleteConfirm = () => {
-    setMenuVisible(false);
     setDeleteDialogVisible(true);
   };
 
   const handleDelete = () => {
-    if (id && selectedCharacter) {
-      removeFromCollection({
+    if (id) {
+      deleteCollection({
+        variables: { id },
+      });
+    }
+  };
+
+  const handleUpdateSubmit = (data: FormData) => {
+    if (id) {
+      updateCollection({
         variables: {
-          collectionId: id,
-          characterId: selectedCharacter,
+          id,
+          input: {
+            name: data.name,
+            icon: data.icon,
+          },
         },
       });
     }
@@ -176,7 +195,7 @@ export default function CollectionDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: collection.name,
@@ -193,12 +212,30 @@ export default function CollectionDetailScreen() {
               style={{ marginLeft: 12 }}
             />
           ),
+          headerRight: () => (
+            <View style={styles.headerButtons}>
+              <IconButton
+                icon="pencil"
+                onPress={handleEdit}
+                color={theme.text}
+                backgroundColor="transparent"
+                size={20}
+              />
+              <IconButton
+                icon="delete"
+                onPress={handleDeleteConfirm}
+                color={theme.error}
+                backgroundColor="transparent"
+                size={20}
+              />
+            </View>
+          ),
         }}
       />
       <FlatList
         data={collection.items.filter((item: CollectionItem) => item.character)}
         keyExtractor={(item: CollectionItem) => item.characterId}
-        contentContainerStyle={[styles.container, { paddingTop: insets.top + 24, backgroundColor: theme.background }]}
+        contentContainerStyle={styles.container}
         onRefresh={refetch}
         refreshing={loading}
         ListEmptyComponent={
@@ -229,8 +266,7 @@ export default function CollectionDetailScreen() {
 
           return (
             <TouchableOpacity
-              onPress={() => router.push(`/character/${item.character.id}`)}
-              onLongPress={(event) => handleLongPress(item.character.id, event)}
+              onPress={() => router.push(`/character/${item.character.id}?collectionId=${id}`)}
               activeOpacity={0.9}
             >
               <CharacterCard character={characterData} />
@@ -239,52 +275,88 @@ export default function CollectionDetailScreen() {
         }}
       />
 
-      <Portal>
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={menuAnchor}
-          contentStyle={{ backgroundColor: theme.surface }}
-        >
-          <Menu.Item
-            onPress={handleDeleteConfirm}
-            title={t('collections.removeCharacter')}
-            leadingIcon="delete"
-            titleStyle={{ color: theme.error }}
-          />
-        </Menu>
+      <Dialog 
+        visible={deleteDialogVisible} 
+        onDismiss={() => setDeleteDialogVisible(false)}
+        style={{ backgroundColor: theme.surface }}
+      >
+        <Dialog.Title style={{ color: theme.text }}>
+          {t('collections.deleteConfirmTitle')}
+        </Dialog.Title>
+        <Dialog.Content>
+          <Text style={{ color: theme.textSecondary }}>
+            {t('collections.deleteConfirmMessage')}
+          </Text>
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button 
+            onPress={() => setDeleteDialogVisible(false)}
+            textColor={theme.textSecondary}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button 
+            onPress={handleDelete}
+            loading={deleting}
+            disabled={deleting}
+            textColor={theme.error}
+          >
+            {t('common.delete')}
+          </Button>
+        </Dialog.Actions>
+      </Dialog>
 
-        <Dialog 
-          visible={deleteDialogVisible} 
-          onDismiss={() => setDeleteDialogVisible(false)}
-          style={{ backgroundColor: theme.surface }}
-        >
-          <Dialog.Title style={{ color: theme.text }}>
-            {t('collections.removeCharacterConfirmTitle')}
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text style={{ color: theme.textSecondary }}>
-              {t('collections.removeCharacterConfirmMessage')}
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button 
-              onPress={() => setDeleteDialogVisible(false)}
-              textColor={theme.textSecondary}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button 
-              onPress={handleDelete}
-              loading={removing}
-              disabled={removing}
-              textColor={theme.error}
-            >
-              {t('common.delete')}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <Dialog 
+        visible={editDialogVisible} 
+        onDismiss={() => setEditDialogVisible(false)}
+        style={{ backgroundColor: theme.surface }}
+      >
+        <Dialog.Title style={{ color: theme.text }}>
+          {t('collections.editCollection')}
+        </Dialog.Title>
+        <Dialog.Content style={styles.editDialogContent}>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                label={t('collections.nameLabel')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.name}
+                errorMessage={errors.name ? t(errors.name.message as string) : undefined}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="icon"
+            render={({ field: { onChange, value } }) => (
+              <IconPicker
+                selectedIcon={value}
+                onSelectIcon={onChange}
+              />
+            )}
+          />
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button 
+            onPress={() => setEditDialogVisible(false)}
+            textColor={theme.textSecondary}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button 
+            onPress={handleSubmit(handleUpdateSubmit)}
+            loading={updating}
+            disabled={updating}
+            textColor={theme.primary}
+          >
+            {t('common.save')}
+          </Button>
+        </Dialog.Actions>
+      </Dialog>
     </SafeAreaView>
   );
 }
@@ -303,5 +375,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginRight: 8,
+  },
+  editDialogContent: {
+    gap: 16,
+    paddingTop: 16,
   },
 });

@@ -21,6 +21,7 @@ async function bootstrap() {
   const port = process.env.PORT || 4003;
   await app.listen(port);
   console.log(`TTS Service is running on port ${port}`);
+  console.log(`📈 Metrics endpoint: http://localhost:${port}/metrics`);
 }
 bootstrap();
 

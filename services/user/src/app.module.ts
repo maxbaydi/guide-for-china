@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -14,6 +15,20 @@ import { RedisModule } from './redis/redis.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+
+    // Prometheus metrics
+    PrometheusModule.register({
+      defaultMetrics: {
+        enabled: true,
+        config: {
+          prefix: 'user_service_',
+        },
+      },
+      defaultLabels: {
+        app: 'user-service',
+        version: '1.0.0',
+      },
     }),
 
     // GraphQL

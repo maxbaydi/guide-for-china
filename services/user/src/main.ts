@@ -25,6 +25,7 @@ async function bootstrap() {
   
   console.log(`🚀 User Service is running on: http://localhost:${port}`);
   console.log(`📊 GraphQL Playground: http://localhost:${port}/graphql`);
+  console.log(`📈 Metrics endpoint: http://localhost:${port}/metrics`);
 }
 
 bootstrap();

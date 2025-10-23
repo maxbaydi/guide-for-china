@@ -1,0 +1,47 @@
+# Docker Compose overlay для режима разработки
+# Использование: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  promtail:
+    volumes:
+      - ./config/promtail/promtail.dev.yml:/etc/promtail/config.yml
+    environment:
+      - LOGGING_ENVIRONMENT=dev
+    command: -config.file=/etc/promtail/config.yml -log.level=debug
+
+  loki:
+    volumes:
+      - ./config/loki/loki.dev.yml:/etc/loki/local-config.yaml
+    environment:
+      - LOKI_RETENTION_PERIOD=24h
+    command: -config.file=/etc/loki/local-config.yaml -log.level=debug
+
+  prometheus:
+    volumes:
+      - ./config/prometheus/prometheus.dev.yml:/etc/prometheus/prometheus.yml
+    environment:
+      - PROMETHEUS_SCRAPE_INTERVAL=5s
+      - PROMETHEUS_SCRAPE_TIMEOUT=5s
+      - MONITORING_ENVIRONMENT=dev
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=1d'
+      - '--web.enable-lifecycle'
+      - '--log.level=debug'
+
+  grafana:
+    environment:
+      - GF_LOG_LEVEL=debug
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+    volumes:
+      - ./config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./config/grafana/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana-data:/var/lib/grafana
+      # Hot-reload конфигураций в dev режиме
+      - ./config:/etc/grafana/config:ro

@@ -27,6 +27,7 @@ async function bootstrap() {
 
   console.log(`\n🚀 HanGuide API Gateway is running on: http://localhost:${port}`);
   console.log(`📊 Health check: http://localhost:${port}/health`);
+  console.log(`📈 Metrics endpoint: http://localhost:${port}/metrics`);
   console.log(`🔐 Auth endpoints: http://localhost:${port}/api/v1/auth/*`);
   console.log(`📚 Dictionary endpoints: http://localhost:${port}/api/v1/dictionary/*\n`);
 }

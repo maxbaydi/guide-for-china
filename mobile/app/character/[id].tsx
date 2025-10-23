@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { useMutation, gql } from '@apollo/client';
 import { ActivityIndicator, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAudioPlayer } from 'expo-audio';
@@ -18,12 +19,19 @@ import { AddToCollectionModal } from '../../components/AddToCollectionModal';
 import { DefinitionGroup } from '../../components/character/DefinitionGroup';
 import { ExampleItem } from '../../components/character/ExampleItem';
 import { CharacterCard } from '../../components/ui/CharacterCard';
-import { showError } from '../../utils/toast';
+import { showError, showSuccess } from '../../utils/toast';
+import { getErrorMessage } from '../../utils/errorHandler';
+
+const REMOVE_FROM_COLLECTION = gql`
+  mutation RemoveFromCollection($collectionId: String!, $characterId: String!) {
+    removeFromCollection(collectionId: $collectionId, characterId: $characterId)
+  }
+`;
 
 export default function CharacterDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, collectionId } = useLocalSearchParams<{ id: string; collectionId?: string }>();
   const { theme, shadows } = useTheme();
   const [activeTab, setActiveTab] = useState<'definitions' | 'examples' | 'similar' | 'reverse'>('definitions');
   const [modalVisible, setModalVisible] = useState(false);
@@ -67,6 +75,22 @@ export default function CharacterDetailScreen() {
     enabled: !!character?.simplified && activeTab === 'reverse',
   });
 
+  const [removeFromCollection, { loading: removing }] = useMutation(REMOVE_FROM_COLLECTION, {
+    refetchQueries: ['GetCollection', 'GetMyCollections'],
+    onCompleted: () => {
+      showSuccess(t('collections.characterRemoved'));
+      router.back();
+    },
+    onError: (error) => {
+      console.error('Failed to remove character:', error);
+      const errorMessage = getErrorMessage(error);
+      showError(errorMessage);
+    },
+    context: {
+      skipErrorToast: true,
+    },
+  });
+
   const handleAddSuccess = (collectionName: string) => {
     // Toast уже показан в AddToCollectionModal
   };
@@ -94,12 +118,37 @@ export default function CharacterDetailScreen() {
     }
   };
 
+  const handleRemoveFromCollection = () => {
+    if (collectionId && id) {
+      removeFromCollection({
+        variables: {
+          collectionId,
+          characterId: id,
+        },
+      });
+    }
+  };
+
   const HeaderRight = () => (
-    <IconButton
-      icon="bookmark-plus-outline"
-      onPress={() => setModalVisible(true)}
-      color={theme.primary}
-    />
+    <View style={styles.headerButtons}>
+      {collectionId && (
+        <IconButton
+          icon="delete"
+          onPress={handleRemoveFromCollection}
+          color={theme.error}
+          backgroundColor="transparent"
+          size={20}
+          disabled={removing}
+        />
+      )}
+      <IconButton
+        icon="bookmark-plus-outline"
+        onPress={() => setModalVisible(true)}
+        color={theme.primary}
+        backgroundColor="transparent"
+        size={20}
+      />
+    </View>
   );
   
   if (isLoading) {
@@ -516,5 +565,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 120,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginRight: 8,
   },
 });

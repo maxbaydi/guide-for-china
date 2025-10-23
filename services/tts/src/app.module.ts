@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { TtsModule } from './tts/tts.module';
 import { HealthController } from './health.controller';
 
@@ -10,6 +11,20 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+
+    // Prometheus metrics
+    PrometheusModule.register({
+      defaultMetrics: {
+        enabled: true,
+        config: {
+          prefix: 'tts_service_',
+        },
+      },
+      defaultLabels: {
+        app: 'tts-service',
+        version: '1.0.0',
+      },
     }),
 
     // Global throttling (requests per minute)

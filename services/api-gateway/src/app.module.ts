@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
@@ -13,6 +14,20 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+
+    // Prometheus metrics
+    PrometheusModule.register({
+      defaultMetrics: {
+        enabled: true,
+        config: {
+          prefix: 'api_gateway_',
+        },
+      },
+      defaultLabels: {
+        app: 'api-gateway',
+        version: '1.0.0',
+      },
     }),
 
     // Global throttling (requests per minute)
